@@ -1,3 +1,19 @@
+## Unreleased — SanHsien fork
+
+### Fixed
+
+- Restored the documented `DEFAULT_RULES`, `merge_rules()` and `rules=` calibration contract for
+  the Shorts gate while retaining v0.12 readability, evidence and first-frame checks.
+- Updated `examples/04_shorts_gate.py` so its default, custom-band and Instagram scenarios pass
+  the v0.12 reading-speed gate.
+- Corrected the interview self-test so only generated episode folder names—not the user's full
+  parent path—must be ASCII, allowing normal Windows CJK workspaces.
+
+### Added
+
+- Reproducible Windows development setup, pytest contract tests, CI, CodeQL, Dependabot,
+  contribution/security files, upstream tracking and KIAO Voice integration guidance.
+
 ## v0.12.0 (2026-08-06)
 
 ### Readability & truthfulness gates（實測校準三連發）

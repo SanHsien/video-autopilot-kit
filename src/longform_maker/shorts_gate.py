@@ -10,9 +10,10 @@
   【內容】S-J 讀畫面文字（品名+價格）/ S-K 運鏡不移開主體 / S-L 品名取該主體正上方那張牌
 
 API:
-    expand_caps(spec)     -> [(start, end, blocks, kind)]   # 由 segment 索引算時間
-    gate_shorts(spec)     -> (ok, report)                   # 全規則檢查
-    assert_shorts(spec)   -> spec（含展開後 caps）           # build 前呼叫，不過直接 raise
+    merge_rules(rules=None, platform=None) -> dict          # 預設 ← 平台 ← 採用者覆寫
+    expand_caps(spec, rules=None) -> [(start, end, blocks, kind)]
+    gate_shorts(spec, rules=None) -> (ok, report)           # 全規則檢查
+    assert_shorts(spec, rules=None) -> spec（含展開後 caps） # build 前呼叫，不過直接 raise
 
 spec 結構（一支 Short）:
     {
@@ -60,9 +61,9 @@ NONWHITE_MAX_COLORS = 2
 # → **死區不可跨平台套用**。不分平台硬擋 = 假 BLOCK（同 M111 家族）。
 # 依據 → references/competitor-vertical-teardown-2026.md §7
 PLATFORM_RULES = {
-    "yt_shorts": {"dur_min": 13.0, "dur_max": 25.0, "deadzone": (25.001, 44.999)},
-    "ig_reels":  {"dur_min": 13.0, "dur_max": 60.0, "deadzone": None},
-    "fb_reels":  {"dur_min": 13.0, "dur_max": 60.0, "deadzone": None},
+    "yt_shorts": {"dur_min": 13.0, "dur_max": 25.0, "dur_deadzone": (25.001, 44.999)},
+    "ig_reels":  {"dur_min": 13.0, "dur_max": 60.0, "dur_deadzone": None},
+    "fb_reels":  {"dur_min": 13.0, "dur_max": 60.0, "dur_deadzone": None},
 }
 DEFAULT_PLATFORM = "yt_shorts"     # 不指定就沿用舊行為（向後相容）
 
@@ -112,6 +113,48 @@ RISKY_PATTERNS = (
 SQ_RATIO = 0.6                     # 首幀銳利度 < 全池最高的 60% → warn（實案 13.7/31.0=0.44）
 
 
+# 公開、可覆寫的校準契約。v0.11 已公開這組 API；v0.12 新增規則時仍須保留，
+# 否則 README / SETUP 的採用者校準流程與 examples/04 都會中斷。
+DEFAULT_RULES = {
+    **PLATFORM_RULES[DEFAULT_PLATFORM],
+    "dur_max_slack": 0.5,
+    "first_cut_max": FIRST_CUT_MAX,
+    "loop_tol": LOOP_TOL,
+    "tail_clear": TAIL_CLEAR,
+    "cap_pad": CAP_PAD,
+    "cap_gap": CAP_GAP,
+    "cap_min_each": 0.45,
+    "nonwhite_max_ratio": NONWHITE_MAX_RATIO,
+    "nonwhite_max_colors": NONWHITE_MAX_COLORS,
+    "white_tokens": ("white", "w"),
+    "cap_dwell_warn": CAP_DWELL_WARN,
+    "cap_rate_warn": CAP_RATE_WARN,
+    "sr_warn": SR_WARN,
+    "sr_fail": SR_FAIL,
+    "sq_ratio": SQ_RATIO,
+}
+
+
+def merge_rules(rules: dict = None, platform: str = None) -> dict:
+    """合併預設值、平台片長帶與採用者覆寫；未知鍵一律拒絕。"""
+    selected_platform = platform or DEFAULT_PLATFORM
+    if selected_platform not in PLATFORM_RULES:
+        raise AssertionError(
+            "unknown platform %r; valid: %s"
+            % (selected_platform, ", ".join(sorted(PLATFORM_RULES)))
+        )
+    merged = dict(DEFAULT_RULES)
+    merged.update(PLATFORM_RULES[selected_platform])
+    for key, value in (rules or {}).items():
+        if key not in DEFAULT_RULES:
+            raise AssertionError(
+                "unknown rule key %r; valid: %s"
+                % (key, ", ".join(sorted(DEFAULT_RULES)))
+            )
+        merged[key] = value
+    return merged
+
+
 def _first_frame_quality(spec: dict):
     """回 {chosen, best, top} 或 None（無 _scan.json 時靜默跳過=向後相容）。"""
     clip0, in0, _d = spec["segs"][0]
@@ -140,11 +183,12 @@ def _first_frame_quality(spec: dict):
 
 # ────────────────────────────────────────────── 字幕展開（S-F）
 
-def expand_caps(spec: dict) -> list:
+def expand_caps(spec: dict, rules: dict = None) -> list:
     """caps_by_seg（綁 segment 索引）→ 時間軸字幕；同段多條自動平分。
 
     人不再手算時間 → 「字幕配錯段」在結構上不可能發生（2026-07-27 s17 整組晚一段的教訓）。
     """
+    calibrated = merge_rules(rules, spec.get("platform", DEFAULT_PLATFORM))
     bounds, acc = [], 0.0
     for _f, _i, d in spec["segs"]:
         bounds.append((round(acc, 3), round(acc + d, 3)))
@@ -161,13 +205,22 @@ def expand_caps(spec: dict) -> list:
         b0, b1 = bounds[idx]
         items = by[idx]
         n = len(items)
-        usable = (b1 - b0) - CAP_PAD * 2 - CAP_GAP * (n - 1)
-        if usable <= 0.45 * n:
+        usable = (
+            (b1 - b0)
+            - calibrated["cap_pad"] * 2
+            - calibrated["cap_gap"] * (n - 1)
+        )
+        if usable <= calibrated["cap_min_each"] * n:
             raise AssertionError(
                 "%s seg%d 長 %.1fs 塞不下 %d 條字幕" % (spec["name"], idx, b1 - b0, n))
         each = usable / n
         for i, (blocks, kind) in enumerate(items):
-            st = round(b0 + CAP_PAD + i * (each + CAP_GAP), 2)
+            st = round(
+                b0
+                + calibrated["cap_pad"]
+                + i * (each + calibrated["cap_gap"]),
+                2,
+            )
             out.append((st, round(st + each, 2), blocks, kind))
     return sorted(out)
 
@@ -182,7 +235,7 @@ def seg_bounds(spec: dict) -> list:
 
 # ────────────────────────────────────────────── 總閘門
 
-def gate_shorts(spec: dict):
+def gate_shorts(spec: dict, rules: dict = None):
     """回傳 (ok, report)。report["fails"] 非空 = 不准出片。"""
     fails, warns = [], []
     name = spec.get("name", "?")
@@ -201,28 +254,35 @@ def gate_shorts(spec: dict):
     plat = spec.get("platform", DEFAULT_PLATFORM)
     if plat not in PLATFORM_RULES:
         fails.append("S-B 未知平台 %r（可用：%s）" % (plat, "/".join(PLATFORM_RULES)))
-        pr = PLATFORM_RULES[DEFAULT_PLATFORM]
+        calibrated = merge_rules(rules, DEFAULT_PLATFORM)
     else:
-        pr = PLATFORM_RULES[plat]
-    dz = pr["deadzone"]
-    if not (pr["dur_min"] - 0.01 <= dur <= pr["dur_max"] + 0.5):
+        calibrated = merge_rules(rules, plat)
+    dz = calibrated["dur_deadzone"]
+    if not (
+        calibrated["dur_min"] - 0.01
+        <= dur
+        <= calibrated["dur_max"] + calibrated["dur_max_slack"]
+    ):
         if dz and dz[0] <= dur <= dz[1]:
             fails.append("S-B 片長 %.1fs 落在 %d-%ds 死區（兩頭不沾；平台=%s）"
                          % (dur, math.ceil(dz[0]), math.floor(dz[1]), plat))
         else:
             fails.append("S-B 片長 %.1fs 不在 %.0f-%.0fs 帶（平台=%s）"
-                         % (dur, pr["dur_min"], pr["dur_max"], plat))
+                         % (dur, calibrated["dur_min"], calibrated["dur_max"], plat))
 
     # ── S-C 首刀 2 秒法則
-    if segs[0][2] > FIRST_CUT_MAX:
-        fails.append("S-C 首刀 %.1fs > 2.0s（2 秒內要有變化）" % segs[0][2])
+    if segs[0][2] > calibrated["first_cut_max"]:
+        fails.append(
+            "S-C 首刀 %.1fs > %.1fs（校準窗內要有變化）"
+            % (segs[0][2], calibrated["first_cut_max"])
+        )
 
     # ── S-D loop：末段須回首段同 clip，且結束點對齊首段起點
     if segs[-1][0] != segs[0][0]:
         fails.append("S-D 末段未回首段 clip（loop 不成立）")
     else:
         lend = segs[-1][1] + segs[-1][2]
-        if abs(lend - segs[0][1]) > LOOP_TOL:
+        if abs(lend - segs[0][1]) > calibrated["loop_tol"]:
             fails.append("S-D loop 未對齊：末段收在 %.1fs、首段起於 %.1fs"
                          "（運鏡片必須對齊末幀==首幀）" % (lend, segs[0][1]))
 
@@ -280,13 +340,19 @@ def gate_shorts(spec: dict):
     # ── S-I white-first
     toks = [t for _i, blocks, _k in caps_bs for t in blocks]
     if toks:
-        nonwhite = [t for t in toks if t[1] not in ("white", "w")]
+        nonwhite = [t for t in toks if t[1] not in calibrated["white_tokens"]]
         ratio = len(nonwhite) / len(toks)
         cols = set(t[1] for t in nonwhite)
-        if ratio > NONWHITE_MAX_RATIO:
-            fails.append("S-I 非白字比例 %.0f%% > 35%%" % (ratio * 100))
-        if len(cols) > NONWHITE_MAX_COLORS:
-            fails.append("S-I 非白色數 %d > 2 種：%s" % (len(cols), sorted(cols)))
+        if ratio > calibrated["nonwhite_max_ratio"]:
+            fails.append(
+                "S-I 非白字比例 %.0f%% > %.0f%%"
+                % (ratio * 100, calibrated["nonwhite_max_ratio"] * 100)
+            )
+        if len(cols) > calibrated["nonwhite_max_colors"]:
+            fails.append(
+                "S-I 非白色數 %d > %d 種：%s"
+                % (len(cols), calibrated["nonwhite_max_colors"], sorted(cols))
+            )
 
     # ── S-P 高風險宣稱要付得出證據（無佐證 = FAIL）
     ev = spec.get("evidence") or {}
@@ -299,25 +365,36 @@ def gate_shorts(spec: dict):
                              % ("/".join(hit), t.replace("\n", "/")))
 
     if fails:
-        return False, _report(fails, warns, dur=dur)
+        return False, _report(
+            fails,
+            warns,
+            dur=dur,
+            platform=plat,
+            rules=calibrated,
+        )
 
     # ── 展開字幕後再驗（S-H 不跨 cut 由 expand 保證；這裡驗尾淨空）
-    caps = expand_caps(spec)
+    caps = expand_caps(spec, rules)
     content = [c for c in caps if c[3] != "addr"]
-    if content and content[-1][1] > dur - TAIL_CLEAR:
-        fails.append("S-D 末字幕距片尾 <%.1fs（loop 接點要乾淨）" % TAIL_CLEAR)
+    if content and content[-1][1] > dur - calibrated["tail_clear"]:
+        fails.append(
+            "S-D 末字幕距片尾 <%.1fs（loop 接點要乾淨）"
+            % calibrated["tail_clear"]
+        )
 
     # ── S-R 閱讀速率：每條字幕 字數/停留秒（讀不完的字幕=白寫，還毀節奏感）
     for st_, en_, blocks, _k in content:
         n = sum(_nchars(t) for t, _c in blocks)
         dwell_ = max(en_ - st_, 0.01)
         cps = n / dwell_
-        if cps > SR_FAIL:
+        if cps > calibrated["sr_fail"]:
             fails.append("S-R 讀不完：%r %d 字只停 %.2fs = %.1f 字/秒（上限 %.0f）"
-                         % (blocks[0][0].replace("\n", "/")[:12], n, dwell_, cps, SR_FAIL))
-        elif cps > SR_WARN:
+                         % (blocks[0][0].replace("\n", "/")[:12], n, dwell_, cps,
+                            calibrated["sr_fail"]))
+        elif cps > calibrated["sr_warn"]:
             warns.append("S-R 偏快：%r %.1f 字/秒（舒適 <%.0f）——縮短字句或拉長該段"
-                         % (blocks[0][0].replace("\n", "/")[:12], cps, SR_WARN))
+                         % (blocks[0][0].replace("\n", "/")[:12], cps,
+                            calibrated["sr_warn"]))
 
     # ── S-O 字幕節奏（warn 級：直式的節奏主體是換句不是剪點）
     cap_rate = cap_dwell = None
@@ -326,24 +403,26 @@ def gate_shorts(spec: dict):
         cap_dwell = dwells[len(dwells) // 2] if len(dwells) % 2 else \
             round((dwells[len(dwells) // 2 - 1] + dwells[len(dwells) // 2]) / 2, 3)
         cap_rate = round(len(content) / dur * 60, 1)
-        if cap_dwell > CAP_DWELL_WARN:
+        if cap_dwell > calibrated["cap_dwell_warn"]:
             warns.append("S-O 字幕中位停留 %.2fs > %.1fs —— 直式的節奏主體是換句不是剪點，"
                          "市面樣本 0.63-1.43s（competitor-vertical-teardown §2）"
-                         % (cap_dwell, CAP_DWELL_WARN))
-        if cap_rate < CAP_RATE_WARN:
+                         % (cap_dwell, calibrated["cap_dwell_warn"]))
+        if cap_rate < calibrated["cap_rate_warn"]:
             warns.append("S-O 換句 %.1f 句/分 < %.0f —— 市面樣本 39.7-75.4，字幕偏稀"
-                         % (cap_rate, CAP_RATE_WARN))
+                         % (cap_rate, calibrated["cap_rate_warn"]))
 
     # ── S-Q 首幀技術品質（warn 級；S-N 內容判斷仍歸人，這裡只抓「選了池裡最軟的一格」）
     q = _first_frame_quality(spec)
-    if q and q["chosen"][0] < SQ_RATIO * q["best"][0]:
-        warns.append("S-Q 首幀銳利度 %.1f（%s@%.1fs）不到全素材池最高 %.1f 的 60%% —— "
+    if q and q["chosen"][0] < calibrated["sq_ratio"] * q["best"][0]:
+        warns.append("S-Q 首幀銳利度 %.1f（%s@%.1fs）不到全素材池最高 %.1f 的 %.0f%% —— "
                      "看 FIRSTFRAME.jpg 時比對更銳的候選：%s"
                      % (q["chosen"][0], q["chosen"][1], q["chosen"][2], q["best"][0],
+                        calibrated["sq_ratio"] * 100,
                         ", ".join("%s@%.1fs=%.1f" % (n, t, s) for s, n, t in q["top"])))
 
     rep = _report(fails, warns, dur=dur, caps=caps, bounds=seg_bounds(spec),
-                  cap_rate=cap_rate, cap_dwell=cap_dwell)
+                  cap_rate=cap_rate, cap_dwell=cap_dwell, platform=plat,
+                  rules=calibrated)
     return rep["ok"], rep
 
 
@@ -356,10 +435,13 @@ def _attach_addr(spec: dict, rep: dict) -> dict:
 
 
 # build 前呼叫：不過直接 raise；過了回傳含展開 caps 的 spec（附地址常駐條）。
-assert_shorts = make_assert(gate_shorts,
-                            lambda spec: spec.get("name", "?"),
-                            "Shorts gate FAIL",
-                            post=_attach_addr)
+def assert_shorts(spec: dict, rules: dict = None) -> dict:
+    return make_assert(
+        lambda value: gate_shorts(value, rules),
+        lambda value: value.get("name", "?"),
+        "Shorts gate FAIL",
+        post=_attach_addr,
+    )(spec)
 
 
 # ────────────────────────────────────────────── self-test

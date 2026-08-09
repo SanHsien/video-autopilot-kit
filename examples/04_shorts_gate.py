@@ -88,8 +88,8 @@ def broken():
     """Three rule breaks at once — each one alone is enough to block the build."""
     return dict(
         name="short_demo_broken",
-        place="Riverside Market",
-        what="a 40-year-old noodle stall",
+        place="RVR",
+        what="RAMEN",
         addr="Riverside Market | 12 Example Road",
         segs=[
             (CLIP, 4.0, 3.2),    # S-C: first cut 3.2s — way past the 2s rule
@@ -100,10 +100,10 @@ def broken():
         ],                       # S-B: 33.2s total lands in the dead zone
         caps_by_seg=[
             # S-A: only ONE caption on segment 0 — the "what is this" line is missing
-            (0, [("Riverside Market", "gold")], "hook"),
-            (1, [("hand-pulled every morning", "white")], "sub"),
-            (2, [("the broth simmers 8 hours", "white")], "sub"),
-            (3, [("USD 3 a bowl", "white")], "sub"),
+            (0, [("RVR", "gold")], "hook"),
+            (1, [("hand-pulled", "white")], "sub"),
+            (2, [("slow broth", "white")], "sub"),
+            (3, [("$3 bowl", "white")], "sub"),
         ],
         bgm_folder="<your-bgm-subfolder>",
     )
@@ -113,8 +113,8 @@ def fixed():
     """Same footage plan, all three breaks repaired."""
     return dict(
         name="short_demo_fixed",
-        place="Riverside Market",
-        what="a 40-year-old noodle stall",
+        place="RVR",
+        what="RAMEN",
         addr="Riverside Market | 12 Example Road",
         segs=[
             (CLIP, 4.0, 2.0),    # first cut now 2.0s
@@ -124,11 +124,11 @@ def fixed():
             (CLIP, 2.4, 1.6),    # loop: 2.4 + 1.6 = 4.0 == first segment's in-point
         ],                       # 13.4s total — inside the band
         caps_by_seg=[
-            (0, [("Riverside Market", "gold")], "hook"),      # who/where
-            (0, [("a 40-year-old noodle stall", "white")], "sub"),   # what is this
-            (1, [("hand-pulled every morning", "white")], "sub"),
-            (2, [("the broth simmers 8 hours", "white")], "sub"),
-            (3, [("USD 3 a bowl", "white")], "sub"),
+            (0, [("RVR", "gold")], "hook"),      # who/where
+            (0, [("RAMEN", "white")], "sub"),    # what is this
+            (1, [("hand-pulled", "white")], "sub"),
+            (2, [("slow broth", "white")], "sub"),
+            (3, [("$3 bowl", "white")], "sub"),
         ],
         bgm_folder="<your-bgm-subfolder>",
     )
@@ -187,7 +187,10 @@ def main():
     print("your 3 worst ones still get blocked.")
 
     # Exit non-zero if the demo itself stopped behaving as documented.
-    return 0 if (not ok_bad and ok_fix and ok_long and ok_reels) else 1
+    all_ok = not ok_bad and ok_fix and ok_long and ok_reels
+    if all_ok:
+        print("OK -- all four gate scenarios behaved as expected")
+    return 0 if all_ok else 1
 
 
 if __name__ == "__main__":

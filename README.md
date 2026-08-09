@@ -159,6 +159,13 @@ python examples/06_teardown.py            # 競品拆解數學：中位數騙人
 一套創作系統最值錢的是**結構與方法論**，不是某個人的私人數字。
 所以這個 repo 給你骨架，你用自己的血肉填滿。
 
+## SanHsien fork 維護入口
+
+本 fork 保留原作者與完整上游歷史，另補 Windows 開發環境、pytest、CI、CodeQL、上游追蹤，
+並修復已確認的公開 quickstart 回歸。開發者請從 [`FORK.md`](FORK.md) 與
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) 開始；字幕服務整合與資料保留風險見
+[`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md)。
+
 ## License
 
 MIT — 保留標註即可自由使用 / 修改 / 商用。
@@ -166,4 +173,3 @@ MIT — 保留標註即可自由使用 / 修改 / 商用。
 ## Author
 
 Hao0321 Studio — 從一套實戰的個人創作系統抽出來的開源框架。
-

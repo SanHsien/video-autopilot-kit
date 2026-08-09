@@ -33,6 +33,10 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # ── OS / editor ──
 .DS_Store
@@ -59,3 +63,4 @@ _out/
 _planning/
 interview_EP*/
 REPORT.md
+upstream-review-report.md

@@ -195,6 +195,14 @@ The kit has **two paths of equal standing** — not "primary vs. secondary":
 The most valuable part of a creator system is the **structure and methodology**, not one
 person's private numbers. So this repo gives you the bones; you fill them with your own flesh.
 
+## SanHsien fork maintenance
+
+This fork preserves the original author and full upstream history, while adding a reproducible
+Windows development setup, pytest coverage, CI, CodeQL, upstream tracking, and fixes for verified
+public quickstart regressions. Maintainers should start with [`FORK.md`](FORK.md) and
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Subtitle-service boundaries and retention risks are
+documented in [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md).
+
 ## License
 
 MIT — keep the notice and use / modify / sell freely.

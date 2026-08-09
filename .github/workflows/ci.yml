@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.9"
+            full-health: true
+          - os: windows-latest
+            python-version: "3.14"
+            full-health: false
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Compile maintained Python files
+        run: python -m compileall -q src examples tools tests
+
+      - name: Lint maintained code
+        run: python -m ruff check tests tools
+
+      - name: Run pytest
+        run: python -m pytest -q
+
+      - name: Quick system health
+        run: python src/system_health.py --quick
+
+      - name: Install ffmpeg and video dependencies
+        if: matrix.full-health
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install "numpy>=1.26" "Pillow>=10"
+
+      - name: Full system health
+        if: matrix.full-health
+        run: python src/system_health.py

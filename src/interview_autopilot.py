@@ -532,7 +532,7 @@ def _selftest() -> int:
               ep_dir("07", "Ming").endswith("interview_EP07_Ming"))
         check("ep_dir stays ascii with cjk name",
               ep_dir("07", "小明").endswith("interview_EP07")
-              and ep_dir("07", "小明").isascii())
+              and os.path.basename(ep_dir("07", "小明")).isascii())
 
         check("profile parser reads filled values",
               _parse_profile("SHOW_NAME: 我的節目\n## OUTRO_LINES\n```\n下次見\n```\n")

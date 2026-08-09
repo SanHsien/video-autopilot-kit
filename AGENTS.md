@@ -1,0 +1,60 @@
+# AGENTS.md
+
+給 Codex 與其他自動化代理在本專案工作時的指引。
+
+## 專案定位
+
+這是 [`Hao0321/video-autopilot-kit`](https://github.com/Hao0321/video-autopilot-kit) 的 MIT fork。
+核心價值是可自行填入資料的影片製作框架、ffmpeg 工具、CapCut 輔助工具與機械化 QA gate；
+不是代管剪輯服務，也不附帶任何私人素材、品牌設定或訂閱服務。
+
+`origin` 是 `SanHsien/video-autopilot-kit`，`upstream` 是原作者 repo。保留上游作者與授權標示，
+本 fork 的維護差異記在 `FORK.md` 與 `docs/DECISIONS.md`。
+
+## 硬性邊界
+
+- 不提交影片、音訊、CapCut 草稿、逐字稿、個人 profile、API key、cookie 或帳號資料。
+- 不把 OCR 信心分數當成品名、價格、材質或數量的真實性證據；高風險字幕仍需人工或來源證據。
+- 不繞過 CapCut、平台或第三方服務的付費與存取限制。
+- 外部轉錄服務預設視為會處理敏感資料；採用前核對正式隱私政策，不只看首頁文案。
+- 上游同步先跑 `python tools/check_upstream_updates.py`，逐筆審查後再 merge/cherry-pick；不盲目覆蓋 fork 修正。
+
+## 技術與資料流
+
+- Python 3.9+；核心 gate 可零依賴執行。
+- 影片處理使用 `ffmpeg` / `ffprobe`。
+- `src/longform_maker/`：腳本、企劃、Shorts 與字幕 gate。
+- `src/silent_vlog_maker/`：ffmpeg 直式影片流程。
+- `src/capcut_helpers/`：CapCut 草稿與交付 QA 工具。
+- `src/interview_autopilot.py`：訪談企劃文件流程。
+- `src/teardown.py`：競品節奏量測；OCR 為選配。
+
+## 開發原則
+
+- 修 bug 先補可重現失敗測試，再做最小修正。
+- 上游公開 API、README quickstart 與 examples 視為相容性契約。
+- 不為了套格式而大改上游程式；Ruff 只要求 `tests/` 與 `tools/`。
+- 使用繁體中文回覆；使用者文件以繁中為主，公開入口同步維護英文摘要。
+- 修改行為時同步更新 `CHANGELOG.md`、相關文件與自帶 self-test。
+
+## 常用指令
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -r requirements-dev.txt
+.venv\Scripts\python -m pytest -q
+.venv\Scripts\python src\system_health.py --quick
+.venv\Scripts\python src\system_health.py
+.venv\Scripts\python -m ruff check tests tools
+.venv\Scripts\pre-commit.exe run --all-files
+```
+
+## 文件入口
+
+- 使用：`README.md`、`SETUP.md`、`TROUBLESHOOTING.md`
+- Fork 關係：`FORK.md`、`docs/UPSTREAM.md`
+- 開發：`docs/DEVELOPMENT.md`
+- 決策：`docs/DECISIONS.md`
+- 外部字幕整合：`docs/INTEGRATIONS.md`
+- 貢獻與安全：`CONTRIBUTING.md`、`SECURITY.md`
