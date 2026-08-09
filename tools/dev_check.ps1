@@ -34,8 +34,11 @@ function Invoke-PythonStep {
 Invoke-PythonStep -Label "Compile maintained Python" -Arguments @(
     "-m", "compileall", "-q", "src", "examples", "tools", "tests"
 )
+Invoke-PythonStep -Label "Compile Path 1 desktop entry points" -Arguments @(
+    "-m", "py_compile", "path1_core.py", "path1_gui.py", "build_exe.py"
+)
 Invoke-PythonStep -Label "Ruff maintained checks" -Arguments @(
-    "-m", "ruff", "check", "tests", "tools"
+    "-m", "ruff", "check", "path1_core.py", "path1_gui.py", "build_exe.py", "tests", "tools"
 )
 Invoke-PythonStep -Label "Pytest" -Arguments @("-m", "pytest", "-q")
 

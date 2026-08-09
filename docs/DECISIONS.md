@@ -1,5 +1,19 @@
 # 維護決策
 
+## 2026-08-09：Path 1 GUI 採薄層 Tkinter + 可攜單檔 EXE
+
+**決定**：以 `path1_core.py` 接回既有 Programmatic pipeline，`path1_gui.py` 只處理表單、
+背景 thread、日誌與本機設定；Windows 版本用 PyInstaller 打成單檔 EXE，內嵌 NumPy、Pillow、
+ffmpeg 與 ffprobe。OCR 保持選配，不進基礎 EXE。
+
+**理由**：`yt_fetch` 已證明「薄層 Tkinter + 共用核心 + PyInstaller」符合使用者的 Windows
+local-first 習慣。Path 1 的價值是既有可重現剪輯與 QA，不應為 GUI 重寫一份規則；影音工作若在
+Tk 主執行緒同步執行又會造成介面假死。單檔 EXE 讓非 Python 使用者可直接使用，但仍須保留
+ffmpeg/ffprobe 的版本與授權證據。
+
+**限制**：GUI 的 Shorts scan 只生成 `_plan.py` 骨架，不替人編造畫面事實；交付 QA 的全幀圖
+仍需人工查看。FFmpeg build 若缺授權/readme、缺 ffprobe 或含 `--enable-nonfree`，封裝直接停止。
+
 ## 2026-08-09：上游 PR #1／#2 不重複合併
 
 **決定**：不 cherry-pick／merge 上游 PR #1 與 #2；兩者標記為已被 v0.12 後續實作

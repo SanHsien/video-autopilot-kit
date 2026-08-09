@@ -22,6 +22,10 @@ python -m venv .venv
 .venv\Scripts\python src\system_health.py
 ```
 
+修改 Path 1 GUI／EXE 時，另依 [`docs/PATH1_GUI.md`](docs/PATH1_GUI.md) 執行聚焦測試、
+80% coverage gate、重新建置，以及封裝後 `--diagnose-file`／`--smoke-test`。不得提交 `dist/`
+或 `build/`；Release 資產必須保留 `THIRD_PARTY_NOTICES.md` 與 FFmpeg distribution 文件。
+
 ## Pull Request
 
 - 一個 PR 聚焦一個問題。

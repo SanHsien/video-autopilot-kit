@@ -37,6 +37,8 @@ venv/
 .ruff_cache/
 .coverage
 htmlcov/
+build/
+dist/
 
 # ── OS / editor ──
 .DS_Store

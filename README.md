@@ -36,13 +36,44 @@ python examples/06_teardown.py            # 競品拆解數學：中位數騙人
 需求：Python 3.9+。**04 / 05 / 06 連 ffmpeg 都不用**（純 Python、零 `pip install`、零素材）；01 需要
 `ffmpeg`/`ffprobe`，03 另需 Pillow + numpy。細節見 [`examples/README.md`](examples/README.md)。
 
+## 🪟 Path 1 圖形介面（Windows-first）
+
+不想組 Python 指令時，直接開啟 Path 1 桌面工作台：
+
+```powershell
+.venv\Scripts\python path1_gui.py
+```
+
+介面涵蓋主要 Programmatic 工作流：Shorts `scan → 填 _plan.py → build + QA`、競品節奏量測、
+交付 QA、螢幕錄影清理，以及 ffmpeg／ffprobe／numpy／Pillow 依賴健檢。影音工作在背景執行，
+視窗不會因 ffmpeg 處理而凍結；素材、企劃與輸出只留在使用者選擇的本機資料夾。
+
+Windows 免安裝單檔 EXE 的建置方式：
+
+```powershell
+.venv\Scripts\python -m pip install -r requirements-build.txt
+.venv\Scripts\python build_exe.py
+# 產物：dist\video-autopilot-path1.exe
+```
+
+建置會把 numpy、Pillow，以及建置電腦 `PATH` 中的 `ffmpeg.exe`／`ffprobe.exe` 一起封裝；
+少任何一支就 fail-closed。OCR 仍是選配，不塞進基礎 EXE。完整操作、輸出與授權注意事項見
+[`docs/PATH1_GUI.md`](docs/PATH1_GUI.md) 與 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
+
 ## 為什麼不一樣
 
 市面上的「creator 系統」要嘛賣你**某個人的設定**（抄了對你沒用、還可能誤導），
 要嘛太通用沒有方法論。這個 kit 給你**骨架**（經實戰的結構），
 `SETUP.md` 一區一區**問你問題**，用你的答案填滿它 —— 這樣它才真的是**你的**系統。
 
-## 🆕 v0.12.1 — Windows-first 可靠性版本
+## 🆕 v0.13.0 — Path 1 GUI + 可攜 EXE
+
+- 新增 Tkinter 桌面工作台，覆蓋 Shorts scan/build、競品量測、交付 QA、螢幕錄影清理與依賴健檢。
+- GUI 共用既有 Python/ffmpeg 核心，長時間工作放在背景 thread，並記憶非敏感本機設定。
+- 新增 PyInstaller 單檔建置，內嵌 numpy、Pillow、ffmpeg、ffprobe，另提供 EXE 自我診斷模式。
+- Windows CI 會實際建置 EXE，再驗證 GUI 啟動與四個內嵌依賴；新核心測試覆蓋率 87%。
+
+## v0.12.1 — Windows-first 可靠性版本
 
 - Windows 11 + PowerShell 成為主要開發與完整驗收環境；`tools/dev_check.ps1` 統一執行
   Ruff、41 項 regression tests、compile 與 ffmpeg system health。

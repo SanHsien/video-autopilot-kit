@@ -43,6 +43,10 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install "numpy>=1.26" "Pillow>=10"
 
+      - name: Install Path 1 build dependencies on Windows
+        if: runner.os == 'Windows'
+        run: python -m pip install -r requirements-build.txt
+
       - name: Install ffmpeg on Ubuntu
         if: runner.os == 'Linux'
         run: |
@@ -52,7 +56,13 @@ jobs:
       - name: Install ffmpeg on Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: choco install ffmpeg -y --no-progress
+        run: |
+          choco install ffmpeg -y --no-progress
+          $ffmpegExe = Get-ChildItem "$env:ChocolateyInstall\lib" -Recurse -Filter ffmpeg.exe |
+            Where-Object { $_.DirectoryName -match '[\\/]bin$' } |
+            Select-Object -First 1
+          if (-not $ffmpegExe) { throw "Chocolatey FFmpeg binary not found" }
+          $ffmpegExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Compile maintained Python files on Ubuntu
         if: runner.os == 'Linux'
@@ -74,3 +84,22 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: pwsh -NoProfile -File tools/dev_check.ps1
+
+      - name: Build Path 1 portable EXE
+        if: runner.os == 'Windows'
+        run: python build_exe.py
+
+      - name: Smoke packaged Path 1 GUI and bundled dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = (Resolve-Path "dist/video-autopilot-path1.exe").Path
+          $diagnostics = Join-Path $env:RUNNER_TEMP "path1-diagnostics.json"
+          $diag = Start-Process -FilePath $exe -ArgumentList @("--diagnose-file", $diagnostics) -Wait -PassThru
+          if ($diag.ExitCode -ne 0) { throw "Dependency diagnostics failed: $($diag.ExitCode)" }
+          $data = Get-Content -Raw -LiteralPath $diagnostics | ConvertFrom-Json
+          foreach ($name in @("ffmpeg", "ffprobe", "numpy", "Pillow")) {
+            if (-not $data.dependencies.$name.ok) { throw "$name is unavailable in packaged EXE" }
+          }
+          $smoke = Start-Process -FilePath $exe -ArgumentList "--smoke-test" -Wait -PassThru
+          if ($smoke.ExitCode -ne 0) { throw "Packaged GUI smoke failed: $($smoke.ExitCode)" }

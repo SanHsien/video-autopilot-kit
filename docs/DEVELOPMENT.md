@@ -19,6 +19,16 @@ python -m venv .venv
 winget install ffmpeg
 ```
 
+只開發 Path 1 GUI／EXE 時，依賴分層如下：
+
+```powershell
+# GUI runtime：NumPy + Pillow
+.venv\Scripts\python -m pip install -r requirements-path1.txt
+
+# EXE build：上列 runtime + PyInstaller
+.venv\Scripts\python -m pip install -r requirements-build.txt
+```
+
 安裝後確認：
 
 ```powershell
@@ -33,6 +43,30 @@ ffprobe -version
 ```powershell
 pwsh -NoProfile -File tools\dev_check.ps1
 ```
+
+GUI／打包相關修改另跑聚焦測試、覆蓋率與 source smoke：
+
+```powershell
+.venv\Scripts\python -m pytest -q tests\test_path1_core.py tests\test_path1_gui.py tests\test_build_exe.py
+.venv\Scripts\python -m coverage erase
+.venv\Scripts\python -m coverage run --branch --source=path1_core -m pytest -q tests\test_path1_core.py
+.venv\Scripts\python -m coverage report --include="*path1_core.py" --fail-under=80
+.venv\Scripts\python path1_gui.py --smoke-test
+```
+
+## Windows EXE 建置與 smoke
+
+建置腳本沿用 `yt_fetch` 的「薄層 Tkinter GUI + PyInstaller spec + 一鍵 build」方式，但 Path 1
+需要 ffprobe，因此 `ffmpeg.exe`、`ffprobe.exe` 兩者都必須封裝：
+
+```powershell
+.venv\Scripts\python build_exe.py
+```
+
+`build_exe.py` 會 fail-closed 檢查兩支 binary、原 distribution 的 `LICENSE`／`README.txt`，
+並拒絕 `--enable-nonfree` build。完整輸出、診斷命令與實機驗收清冊見
+[`PATH1_GUI.md`](PATH1_GUI.md)。修改 `path1_gui.py`、`path1_core.py`、spec 或 build script 後，
+不可只以 pytest 宣稱完成；至少要重新建置 EXE，再跑 `--diagnose-file` 與 `--smoke-test`。
 
 只改文件或需要快速迭代時可先跑 `-Quick`；提交前仍要回到完整閘門：
 

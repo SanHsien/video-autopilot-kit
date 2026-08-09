@@ -4,7 +4,7 @@
 - Review baseline: fork `3176b36169214a9987dc6c22fda54ede07e2429c`
 - Upstream reviewed through: `de4cef7b347127eeb378985755cd90586758adf5`
 - Primary environment: Windows 11、PowerShell、Python 3.14、ffmpeg 9
-- Status: 已修復本輪確認的 bug；最新驗收證據以本文件為準
+- Status: v0.13.0 Path 1 GUI／EXE 已實作；本輪確認的 finding 均已修復
 
 ## 結論
 
@@ -14,6 +14,30 @@ CapCut 草稿一致性、Windows 程序驗證、CP950/UTF-8 邊界與自動流�
 
 本輪沒有保留未修的 high/medium finding。Bandit medium/high 掃描為 0，`requirements-dev.txt`
 的 pip-audit 沒有已知漏洞。
+
+## v0.13.0 Path 1 GUI／EXE review
+
+本輪依 `yt_fetch` 的已驗證模式加入薄層 Tkinter GUI、可測 adapter 與 PyInstaller 單檔封裝。
+GUI 覆蓋 Shorts scan/build、競品量測、交付 QA、螢幕錄影清理與依賴健檢；所有長時間影音工作
+都在背景 thread 執行，剪輯與 QA 規則仍以原模組為 SoT。
+
+| ID | 嚴重度 | Finding | 修復與證據 |
+|---|---|---|---|
+| G-01 | High | 原 `shorts_autopilot` 把 inbox 設為 placeholder、BGM 設為原作者私人磁碟路徑；GUI 若沿用 global 會讓一般使用者 scan/build 到錯誤位置。 | `scan()`／`build()` 接受明確 caller root；CLI fallback 改用 `VIDEO_KIT_SHORTS_INBOX`／`VIDEO_KIT_BGM_ROOT` 與中性 repo fallback；adapter 與 env contract tests。 |
+| G-02 | High | 只把 Python 打成 EXE 不能證明 Path 1 可攜；現有核心同時呼叫 `ffmpeg` 和 `ffprobe`，少包其中一支仍會在使用者電腦失敗。 | spec 同時嵌入兩支 binary；封裝後 `--diagnose-file` 顯示兩者均解析自 `_MEI…\\bin`，NumPy/Pillow 也在 bundle。 |
+| G-03 | Medium | 在 Tk callback 直接跑 ffmpeg 會讓 UI 長時間無回應，也無法持續顯示既有 pipeline 日誌。 | 單一背景 worker + thread-safe queue；run buttons 執行中停用，stdout/stderr 串流到全域日誌，完成／BLOCKED 狀態明確。 |
+| G-04 | Medium | 把 Gyan full build 封進 MIT 專案但不保存其 license/build provenance，會讓使用者誤以為 MIT 涵蓋所有內容。 | build 拒絕 `--enable-nonfree`，確認本候選為 GPL-3.0-or-later，保留 FFmpeg 原 LICENSE/README、第三方 notices 與三個 binary hash。 |
+
+### v0.13.0 驗收證據
+
+- 聚焦測試：Path 1 core/GUI/build contracts 全綠；`path1_core.py` branch coverage **87%**。
+- Canonical Windows gate：compile、Ruff、**66 passed**、完整 ffmpeg health 全綠。
+- 合成素材 adapter smoke：實際產生 `_plan.py`、`_work/_scan.json`、`_work/SHEET.jpg`。
+- GUI 畫面檢查：Shorts、影片工具、環境三分頁在 1180×820 無截斷／重疊；日誌與依賴表可讀。
+- Windows EXE：`video-autopilot-path1.exe`，版本 `0.13.0`，204,383,243 bytes，SHA-256
+  `f50b9cfc4252826a392bd4488f10abe704b946ec35b444e5ac57df1612a05f0a`。
+- 封裝後 diagnostics 與 GUI smoke 均 exit 0；結束後無殘留 process。內嵌 NumPy 2.5.1、
+  Pillow 12.3.0、Gyan FFmpeg/ffprobe 9.0。
 
 ## 已修 findings
 
@@ -63,7 +87,8 @@ Canonical Windows gate：
 pwsh -NoProfile -File tools\dev_check.ps1
 ```
 
-本輪結果：`41 passed`、Ruff 全綠、full health 全模組 GREEN、pre-commit 全 hooks 通過。
+v0.12.1 初始 review 結果：`41 passed`、Ruff 全綠、full health 全模組 GREEN、pre-commit
+全 hooks 通過；v0.13.0 的新增證據與最新 test count 以上方專節及 release checks 為準。
 
 ## 尚未宣稱的範圍
 

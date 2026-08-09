@@ -1,0 +1,3 @@
+# Path 1 programmatic video runtime used by the GUI and portable EXE.
+numpy>=1.26
+Pillow>=10

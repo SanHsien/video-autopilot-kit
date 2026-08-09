@@ -28,22 +28,28 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "longform_maker"))
 
 from av_util import contact_sheet, duration as _dur, grab_frame, run as _run  # noqa: E402
 
-INBOX = r"<INBOX>/vertical-shorts"
-BGM_ROOT = r"D:/creator0321_YT_Claude/assets/bgm"
+PROJECT_ROOT = os.environ.get("VIDEO_KIT_PROJECT_ROOT") or ROOT
+INBOX = os.environ.get("VIDEO_KIT_SHORTS_INBOX") or os.path.join(
+    PROJECT_ROOT, "videos", "_INBOX", "shorts"
+)
+BGM_ROOT = os.environ.get("VIDEO_KIT_BGM_ROOT") or os.path.join(
+    PROJECT_ROOT, "assets", "bgm"
+)
 
 
 # ───────────────────────────────────────────── 步驟1：scan
 
-def scan(folder_id: str) -> dict:
+def scan(folder_id: str, inbox=None) -> dict:
     """正規化 + GPS + 接觸表 + 標價牌放大圖 + _plan.py 骨架。"""
     from silent_vlog_maker import normalize_to_portrait, extract_gps
 
-    src_dir = os.path.join(INBOX, folder_id)
+    src_dir = os.path.join(os.fspath(inbox or INBOX), folder_id)
     if not os.path.isdir(src_dir):
         raise FileNotFoundError("找不到素材資料夾：" + src_dir)
     work = os.path.join(src_dir, "_work")
@@ -291,7 +297,7 @@ def auto_plan(info: dict, target: float = 16.0) -> dict:
 
 # ───────────────────────────────────────────── 步驟3：build + QA
 
-def _bgm_candidates(folder_name: str) -> list:
+def _bgm_candidates(folder_name: str, bgm_root=None) -> list:
     """BGM 候選。2026-07-29 去靜默：
 
     舊版三層靜默疊加——資料夾名打錯→無聲換 _通用（氣氛全錯不會知道）→
@@ -299,12 +305,14 @@ def _bgm_candidates(folder_name: str) -> list:
     才間接發現，訊息還跟真因無關。改成：fallback 大聲印、全空直接 raise。
     （順修：舊 fallback 只 glob *.mp3，_通用 放 wav 會被漏。）
     """
+    root = os.fspath(bgm_root or BGM_ROOT)
+
     def _glob(name):
-        d = os.path.join(BGM_ROOT, name)
+        d = os.path.join(root, name)
         return (sorted(glob.glob(os.path.join(d, "*.wav"))) +
                 sorted(glob.glob(os.path.join(d, "*.mp3"))))
 
-    if not os.path.isdir(os.path.join(BGM_ROOT, folder_name)):
+    if not os.path.isdir(os.path.join(root, folder_name)):
         print("   WARN BGM folder does not exist: %r -> fallback _通用" % folder_name)
     cands = _glob(folder_name)
     if not cands:
@@ -314,15 +322,15 @@ def _bgm_candidates(folder_name: str) -> list:
         raise AssertionError(
             "BGM candidates empty: folder %r and _通用 both have no wav/mp3 -- "
             "silent Short relies on BGM as the only audio; no BGM = broken deliverable. "
-            "Fix the folder name in _plan.py or add tracks under %s" % (folder_name, BGM_ROOT))
+            "Fix the folder name in _plan.py or add tracks under %s" % (folder_name, root))
     return cands
 
 
-def build(folder_id: str) -> dict:
+def build(folder_id: str, inbox=None, bgm_root=None) -> dict:
     from shorts_gate import assert_shorts
     from silent_vlog_maker import build_one_short, pick_bgm
 
-    src_dir = os.path.join(INBOX, folder_id)
+    src_dir = os.path.join(os.fspath(inbox or INBOX), folder_id)
     plan_path = os.path.join(src_dir, "_plan.py")
     if not os.path.exists(plan_path):
         raise FileNotFoundError("還沒有 _plan.py，先跑 scan：" + plan_path)
@@ -339,7 +347,7 @@ def build(folder_id: str) -> dict:
     for w in ready.get("_warns", []):
         print("   WARN " + w)
 
-    cands = _bgm_candidates(spec["bgm_folder"])
+    cands = _bgm_candidates(spec["bgm_folder"], bgm_root=bgm_root)
     bgm = pick_bgm(cands, ready["_dur"])
 
     out_dir = os.path.join(src_dir, "_out")

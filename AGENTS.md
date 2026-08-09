@@ -29,6 +29,8 @@
 - `src/capcut_helpers/`：CapCut 草稿與交付 QA 工具。
 - `src/interview_autopilot.py`：訪談企劃文件流程。
 - `src/teardown.py`：競品節奏量測；OCR 為選配。
+- `path1_core.py`／`path1_gui.py`：Path 1 可測 adapter 與 Tkinter 桌面工作台。
+- `video_autopilot_path1.spec`／`build_exe.py`：內嵌 ffmpeg/ffprobe 的 Windows 單檔 EXE。
 
 ## 開發原則
 
@@ -37,6 +39,8 @@
 - 不為了套格式而大改上游程式；Ruff 只要求 `tests/` 與 `tools/`。
 - 使用繁體中文回覆；使用者文件以繁中為主，公開入口同步維護英文摘要。
 - 修改行為時同步更新 `CHANGELOG.md`、相關文件與自帶 self-test。
+- GUI 保持薄層；剪輯、QA 與量測規則留在既有核心，長工作不得阻塞 Tk 主執行緒。
+- EXE build 必須 fail-closed 檢查 ffmpeg/ffprobe 與授權文件，不封裝 `--enable-nonfree` build。
 
 ## 常用指令
 
@@ -50,13 +54,16 @@ pwsh -NoProfile -File tools\dev_check.ps1
 .venv\Scripts\python src\system_health.py
 .venv\Scripts\python -m ruff check tests tools
 .venv\Scripts\pre-commit.exe run --all-files
+.venv\Scripts\python path1_gui.py --smoke-test
+.venv\Scripts\python -m pip install -r requirements-build.txt
+.venv\Scripts\python build_exe.py
 ```
 
 ## 文件入口
 
 - 使用：`README.md`、`SETUP.md`、`TROUBLESHOOTING.md`
 - Fork 關係：`FORK.md`、`docs/UPSTREAM.md`
-- 開發：`docs/DEVELOPMENT.md`、`REPO_REVIEW.md`
+- 開發：`docs/DEVELOPMENT.md`、`docs/PATH1_GUI.md`、`REPO_REVIEW.md`
 - 決策：`docs/DECISIONS.md`
 - 外部字幕整合：`docs/INTEGRATIONS.md`
 - 貢獻與安全：`CONTRIBUTING.md`、`SECURITY.md`

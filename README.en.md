@@ -46,6 +46,32 @@ Needs Python 3.9+. **04 / 05 / 06 need no ffmpeg at all** (pure Python, zero `pi
 media); 01 needs `ffmpeg`/`ffprobe` and 03 additionally needs Pillow + numpy. See
 [`examples/README.md`](examples/README.md).
 
+## 🪟 Path 1 desktop GUI (Windows-first)
+
+If you do not want to assemble Python commands, launch the Path 1 desktop workbench:
+
+```powershell
+.venv\Scripts\python path1_gui.py
+```
+
+It covers the primary Programmatic workflows: Shorts `scan → edit _plan.py → build + QA`,
+competitor rhythm teardown, delivery QA, screen-recording cleanup, and dependency checks for
+ffmpeg, ffprobe, NumPy, and Pillow. Video jobs run in a background thread, and media, plans, and
+outputs remain in the local folders selected by the user.
+
+Build the no-install, single-file Windows EXE with:
+
+```powershell
+.venv\Scripts\python -m pip install -r requirements-build.txt
+.venv\Scripts\python build_exe.py
+# output: dist\video-autopilot-path1.exe
+```
+
+The build embeds NumPy, Pillow, and the `ffmpeg.exe` / `ffprobe.exe` resolved from the builder's
+`PATH`; a missing binary stops the build. OCR remains optional and is intentionally excluded from
+the base EXE. See [`docs/PATH1_GUI.md`](docs/PATH1_GUI.md) and
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for the complete workflow and license notes.
+
 ## Why this is different
 
 Most "creator systems" either sell you **someone else's setup** (useless to you, sometimes
@@ -53,7 +79,18 @@ misleading) or stay too generic to have real methodology. This kit gives you the
 (a battle-tested structure); `SETUP.md` **asks you questions** one section at a time, and
 your answers fill it in — so it actually becomes **your** system.
 
-## 🆕 v0.12.1 — Windows-first reliability release
+## 🆕 v0.13.0 — Path 1 GUI + portable EXE
+
+- Added a Tkinter desktop workbench for Shorts scan/build, teardown, delivery QA,
+  screen-recording cleanup, and dependency checks.
+- Reuses the existing Python/ffmpeg core, runs long jobs in a background thread, and remembers
+  only non-secret local settings.
+- Added a single-file PyInstaller build with embedded NumPy, Pillow, ffmpeg, and ffprobe plus an
+  EXE self-diagnostics mode.
+- Windows CI now builds the EXE and verifies GUI startup and all four embedded dependencies; the
+  new core has 87% test coverage.
+
+## v0.12.1 — Windows-first reliability release
 
 - Windows 11 + PowerShell is now the primary development and full-validation environment;
   `tools/dev_check.ps1` runs Ruff, 41 regression tests, compilation, and ffmpeg system health.

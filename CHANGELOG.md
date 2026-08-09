@@ -1,3 +1,30 @@
+## v0.13.0 — Path 1 GUI (2026-08-09)
+
+### Added
+
+- Added `path1_gui.py`, a Windows-first Tkinter workbench covering the primary Programmatic
+  workflows: Shorts scan/build, competitor teardown, delivery QA, screen-recording cleanup, and
+  dependency health.
+- Added `path1_core.py` as a tested adapter layer so the GUI reuses the existing Path 1 pipeline
+  instead of duplicating editing logic. Long-running work streams logs from a background thread.
+- Added `video_autopilot_path1.spec`, `build_exe.py`, version metadata, build/runtime requirement
+  files, and a single-file `video-autopilot-path1.exe` build.
+- The EXE embeds NumPy, Pillow, ffmpeg, and ffprobe; `--diagnose-file` proves which bundled
+  components are active without opening a window, and `--smoke-test` verifies GUI construction.
+- Added third-party notices and FFmpeg build provenance. The build rejects `--enable-nonfree`,
+  preserves the binary distribution's license/readme, and emits hashes in `path1-build-info.json`.
+- Added focused unit/integration contracts for GUI import safety, form validation, Path 1 adapter
+  calls, bundle discovery, packaging rules, dependency diagnostics, and blocking/error paths.
+
+### Changed
+
+- `shorts_autopilot.scan()` and `build()` now accept caller-supplied inbox/BGM roots while keeping
+  their original positional CLI contract, so adopters no longer depend on the author's local paths.
+- The remaining Shorts CLI defaults now use `VIDEO_KIT_SHORTS_INBOX` and `VIDEO_KIT_BGM_ROOT`
+  (falling back under `VIDEO_KIT_PROJECT_ROOT`) instead of a private drive path.
+- The canonical Windows gate compiles and lints the GUI/build entry points; Windows CI also builds
+  and smokes the packaged EXE.
+
 ## v0.12.1 — SanHsien fork (2026-08-09)
 
 ### Fixed
