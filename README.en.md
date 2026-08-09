@@ -16,6 +16,11 @@
 > The flip side, stated plainly: `knowledge/` **is** the author's own hard-won methodology —
 > that part is deliberately open-sourced. It is *how to think*, not *his numbers*.
 
+> **SanHsien fork: Windows-first.** Windows 11 + PowerShell is the primary environment for
+> development, debugging, CapCut integration, and full validation. The Programmatic path remains
+> Linux/macOS-compatible and Ubuntu CI supplies the cross-platform evidence. See
+> [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for setup and the canonical one-command gate.
+
 *(中文版見 [README.md](README.md))*
 
 ## 🧭 Which path should I use? (3-second decision tree)
@@ -197,10 +202,12 @@ person's private numbers. So this repo gives you the bones; you fill them with y
 
 ## SanHsien fork maintenance
 
-This fork preserves the original author and full upstream history, while adding a reproducible
-Windows development setup, pytest coverage, CI, CodeQL, upstream tracking, and fixes for verified
-public quickstart regressions. Maintainers should start with [`FORK.md`](FORK.md) and
-[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Subtitle-service boundaries and retention risks are
+This fork preserves the original author and full upstream history and is maintained
+**Windows-first**: Windows 11 + PowerShell is the primary development, debugging, and full
+validation environment. It adds pytest, Windows/Ubuntu CI, CodeQL, and upstream tracking.
+Maintainers should start with [`FORK.md`](FORK.md), [`REPO_REVIEW.md`](REPO_REVIEW.md), and
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), then run
+`pwsh -NoProfile -File tools\dev_check.ps1` before committing. Subtitle-service boundaries and retention risks are
 documented in [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md).
 
 ## License

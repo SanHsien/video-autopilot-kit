@@ -27,7 +27,7 @@ def _probe_duration(media_path) -> float:
     r = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
          "-of", "default=nw=1:nk=1", str(media_path)],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     if r.returncode != 0 or not r.stdout.strip():
         raise RuntimeError(
@@ -157,7 +157,9 @@ def force_mix_bgm(
         str(tmp),
     ]
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
     if result.returncode != 0:
         raise RuntimeError(f"force_mix_bgm failed: {result.stderr[-500:]}")
 
@@ -298,7 +300,9 @@ def add_outro_card(
         "-movflags", "+faststart",
         str(tmp),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
     if result.returncode != 0:
         raise RuntimeError(f"add_outro_card failed: {result.stderr[-500:]}")
 
@@ -355,7 +359,7 @@ def detect_voice_end(
         ["ffmpeg", "-hide_banner", "-nostats", "-i", str(media_path),
          "-af", f"silencedetect=noise={noise_db}dB:d={min_silence_sec}",
          "-f", "null", "-"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     return _parse_silencedetect(r.stderr, total)   # silencedetect 輸出在 stderr
 
@@ -386,7 +390,9 @@ def reencode_player_safe(
         "-c:a", "copy",   # M83: 不動 audio（避免 re-encode drift）
         str(tmp),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
     if result.returncode != 0:
         raise RuntimeError(f"reencode_player_safe failed: {result.stderr[-500:]}")
     import shutil
@@ -426,7 +432,9 @@ def trim_to_voice_end(
         "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
         str(tmp),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
     if result.returncode != 0:
         raise RuntimeError(f"trim_to_voice_end failed: {result.stderr[-500:]}")
     import shutil
@@ -468,7 +476,7 @@ def finalize_export(
     # Verify
     result = subprocess.run(
         ["ffprobe", "-v", "error", "-show_format", "-show_streams", str(final_mp4)],
-        capture_output=True, text=True
+        capture_output=True, text=True, encoding="utf-8", errors="replace"
     )
     stats = {}
     for line in result.stdout.splitlines():

@@ -34,7 +34,14 @@ SHEET_MAX_COLS = 6
 
 def run(cmd, **kw):
     """subprocess.run 的統一包裝：抓 stdout/stderr、不因非 ASCII 輸出炸掉。"""
-    return subprocess.run(cmd, capture_output=True, text=True, errors="replace", **kw)
+    return subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        **kw,
+    )
 
 
 def write_text(path: str, text: str, announce: bool = True) -> str:

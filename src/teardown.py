@@ -92,7 +92,13 @@ OPTIONAL_PKGS = ("rapidocr-onnxruntime", "opencc-python-reimplemented")
 
 
 def _run(argv):
-    return subprocess.run(argv, capture_output=True, text=True, errors="replace")
+    return subprocess.run(
+        argv,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
 
 
 # ── 公開 API：純統計，不碰檔案 ───────────────────────────────────────────────

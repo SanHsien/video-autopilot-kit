@@ -44,7 +44,8 @@ def scan(folder_id: str) -> dict:
     from silent_vlog_maker import normalize_to_portrait, extract_gps
 
     src_dir = os.path.join(INBOX, folder_id)
-    assert os.path.isdir(src_dir), "找不到素材資料夾：" + src_dir
+    if not os.path.isdir(src_dir):
+        raise FileNotFoundError("找不到素材資料夾：" + src_dir)
     work = os.path.join(src_dir, "_work")
     os.makedirs(work, exist_ok=True)
 
@@ -57,7 +58,8 @@ def scan(folder_id: str) -> dict:
                 seen.add(k)
                 raws.append(f)
     raws.sort()
-    assert raws, "資料夾內沒有影片：" + src_dir
+    if not raws:
+        raise ValueError("資料夾內沒有影片：" + src_dir)
 
     info = {"folder": folder_id, "clips": [], "gps": []}
 
@@ -322,15 +324,16 @@ def build(folder_id: str) -> dict:
 
     src_dir = os.path.join(INBOX, folder_id)
     plan_path = os.path.join(src_dir, "_plan.py")
-    assert os.path.exists(plan_path), "還沒有 _plan.py，先跑 scan：" + plan_path
+    if not os.path.exists(plan_path):
+        raise FileNotFoundError("還沒有 _plan.py，先跑 scan：" + plan_path)
 
     import importlib.util
     spec_mod = importlib.util.spec_from_file_location("plan_%s" % folder_id, plan_path)
     mod = importlib.util.module_from_spec(spec_mod)
     spec_mod.loader.exec_module(mod)
     spec = mod.SPEC
-    assert "TODO" not in json.dumps(spec, default=str), \
-        "%s/_plan.py 還有 TODO 未填" % folder_id
+    if "TODO" in json.dumps(spec, default=str):
+        raise ValueError("%s/_plan.py 還有 TODO 未填" % folder_id)
 
     ready = assert_shorts(spec)          # ← 全規則機械閘門
     for w in ready.get("_warns", []):

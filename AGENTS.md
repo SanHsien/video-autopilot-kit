@@ -10,6 +10,7 @@
 
 `origin` 是 `SanHsien/video-autopilot-kit`，`upstream` 是原作者 repo。保留上游作者與授權標示，
 本 fork 的維護差異記在 `FORK.md` 與 `docs/DECISIONS.md`。
+主要開發與完整驗收環境是 Windows 11 + PowerShell；跨平台相容性由 Ubuntu CI 補證。
 
 ## 硬性邊界
 
@@ -43,6 +44,7 @@
 python -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
 .venv\Scripts\python -m pip install -r requirements-dev.txt
+pwsh -NoProfile -File tools\dev_check.ps1
 .venv\Scripts\python -m pytest -q
 .venv\Scripts\python src\system_health.py --quick
 .venv\Scripts\python src\system_health.py
@@ -54,7 +56,7 @@ python -m venv .venv
 
 - 使用：`README.md`、`SETUP.md`、`TROUBLESHOOTING.md`
 - Fork 關係：`FORK.md`、`docs/UPSTREAM.md`
-- 開發：`docs/DEVELOPMENT.md`
+- 開發：`docs/DEVELOPMENT.md`、`REPO_REVIEW.md`
 - 決策：`docs/DECISIONS.md`
 - 外部字幕整合：`docs/INTEGRATIONS.md`
 - 貢獻與安全：`CONTRIBUTING.md`、`SECURITY.md`

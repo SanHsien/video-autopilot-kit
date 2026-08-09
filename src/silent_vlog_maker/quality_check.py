@@ -39,7 +39,7 @@ def verify_output(mp4_path: Path, expected_outro: bool = True,
         ["ffprobe", "-v", "error", "-show_entries",
          "stream=width,height:format=duration", "-of", "default=nw=1",
          str(mp4_path)],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     width = height = 0
     duration = 0.0
@@ -57,7 +57,7 @@ def verify_output(mp4_path: Path, expected_outro: bool = True,
     loud = subprocess.run(
         ["ffprobe", "-v", "error", "-i", str(mp4_path),
          "-show_entries", "stream=codec_type", "-of", "csv=p=0"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     has_audio = "audio" in loud.stdout
 
@@ -65,7 +65,7 @@ def verify_output(mp4_path: Path, expected_outro: bool = True,
         loud2 = subprocess.run(
             ["ffmpeg", "-hide_banner", "-i", str(mp4_path),
              "-af", "loudnorm=print_format=summary", "-f", "null", "-"],
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
         integrated = -99.0
         lra = -99.0
@@ -105,7 +105,7 @@ def verify_output(mp4_path: Path, expected_outro: bool = True,
             ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
              "-ss", str(outro_frame_t), "-i", str(mp4_path),
              "-frames:v", "1", str(tmp_frame)],
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
         if tmp_frame.exists():
             frame_size = tmp_frame.stat().st_size

@@ -1,4 +1,8 @@
-# 開發與驗證
+# 開發與驗證（Windows-first）
+
+SanHsien fork 的主要開發、除錯與完整驗收環境是 Windows 11 + PowerShell。Programmatic
+路徑仍保留 Linux/macOS 相容性，但新修正必須先通過 Windows canonical gate，再由 Ubuntu CI
+補跨平台證據。
 
 ## Windows PowerShell
 
@@ -23,6 +27,18 @@ ffprobe -version
 ```
 
 ## 提交前驗證
+
+預設跑完整 Windows 閘門（compile、Ruff、pytest、真 ffmpeg health）：
+
+```powershell
+pwsh -NoProfile -File tools\dev_check.ps1
+```
+
+只改文件或需要快速迭代時可先跑 `-Quick`；提交前仍要回到完整閘門：
+
+```powershell
+pwsh -NoProfile -File tools\dev_check.ps1 -Quick
+```
 
 先跑快速閉環：
 
@@ -53,8 +69,9 @@ planning/output 目錄不得提交。示範敏感流程時使用合成或已公�
 
 ## CI 對齊
 
-GitHub Actions 會在 Ubuntu/Python 3.9 與 Windows/Python 3.14 執行 compile、Ruff、pytest 與
-quick health。Ubuntu job 另裝 ffmpeg、numpy、Pillow 後跑完整 health。CodeQL 每週掃描 Python。
+GitHub Actions 會在 Ubuntu/Python 3.9 與 Windows/Python 3.14 安裝 ffmpeg、numpy、Pillow。
+Windows job 直接執行 `tools/dev_check.ps1` 的完整閘門；Ubuntu job 執行等價的 compile、Ruff、
+pytest 與 full health，保留跨平台相容性證據。CodeQL 每週掃描 Python。
 
 ## 上游同步
 

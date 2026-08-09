@@ -82,6 +82,29 @@ def test_unknown_rule_key_fails_closed() -> None:
         shorts_gate.merge_rules({"dur_mn": 12.0})
 
 
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"segs": None},
+        {"segs": []},
+        {"segs": [("clip.mp4", 0.0)]},
+        {"segs": [("clip.mp4", 0.0, -1.0)]},
+        {"caps_by_seg": None},
+        {"caps_by_seg": [(99, [("越界", "white")], "sub")]},
+        {"caps_by_seg": [(0, [], "hook")]},
+        {"caps_by_seg": [(0, [("缺顏色",)], "hook")]},
+    ],
+)
+def test_malformed_specs_are_blocked_instead_of_crashing(changes: dict) -> None:
+    spec = make_long_spec()
+    spec.update(changes)
+
+    ok, report = shorts_gate.gate_shorts(spec)
+
+    assert not ok
+    assert any("SPEC" in failure for failure in report["fails"])
+
+
 def test_assert_shorts_accepts_the_same_override_contract() -> None:
     ready = shorts_gate.assert_shorts(
         make_long_spec(),

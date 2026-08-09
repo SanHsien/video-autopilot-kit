@@ -72,7 +72,7 @@ def clean_screen_recording(
     r = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
          "-of", "csv=p=0", str(input_mp4)],
-        capture_output=True, text=True
+        capture_output=True, text=True, encoding="utf-8", errors="replace"
     )
     if r.returncode != 0 or not r.stdout.strip():
         raise RuntimeError(f"ffprobe 讀不到時長: {input_mp4}（檔案壞或非媒體檔）; stderr={r.stderr[-200:]}")
@@ -83,7 +83,7 @@ def clean_screen_recording(
     r = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "stream=width,height",
          "-of", "csv=p=0:s=x", "-select_streams", "v:0", str(input_mp4)],
-        capture_output=True, text=True
+        capture_output=True, text=True, encoding="utf-8", errors="replace"
     )
     src_w, src_h = [int(x) for x in r.stdout.strip().split("x")[:2]]
 
@@ -122,7 +122,9 @@ def clean_screen_recording(
         "-movflags", "+faststart",
         str(output_mp4),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
     if result.returncode != 0:
         raise RuntimeError(f"clean_screen_recording failed: {result.stderr[-500:]}")
 
@@ -165,7 +167,9 @@ def clean_voice_pauses(
         "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
         str(output_voice),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
     if result.returncode != 0:
         raise RuntimeError(f"clean_voice_pauses failed: {result.stderr[-500:]}")
     return output_voice
@@ -249,7 +253,7 @@ def normalize_broll_asset(
             ["ffprobe", "-v", "error", "-select_streams", stream,
              "-show_entries", f"stream={entry}", "-of", "default=nw=1:nk=1",
              str(asset_path)],
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
         return r.stdout.strip()
 
@@ -290,7 +294,9 @@ def normalize_broll_asset(
         action = "strip_only"
     cmd.append(str(tmp))
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
     if result.returncode != 0:
         tmp.unlink(missing_ok=True)
         raise RuntimeError(f"normalize_broll_asset failed ({asset_path.name}): {result.stderr[-300:]}")
@@ -354,11 +360,11 @@ def batch_normalize_broll_folder(
         fps_r = subprocess.run(
             ["ffprobe", "-v", "error", "-select_streams", "v:0",
              "-show_entries", "stream=avg_frame_rate", "-of", "default=nw=1:nk=1", str(f)],
-            capture_output=True, text=True).stdout.strip()
+            capture_output=True, text=True, encoding="utf-8", errors="replace").stdout.strip()
         aud_r = subprocess.run(
             ["ffprobe", "-v", "error", "-select_streams", "a:0",
              "-show_entries", "stream=codec_name", "-of", "default=nw=1:nk=1", str(f)],
-            capture_output=True, text=True).stdout.strip()
+            capture_output=True, text=True, encoding="utf-8", errors="replace").stdout.strip()
         if fps_r != f"{target_fps}/1" or (strip_audio and aud_r):
             still_dirty.append(f"{f.name} (fps={fps_r} audio={aud_r or 'none'})")
 

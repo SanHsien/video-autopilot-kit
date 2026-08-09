@@ -92,7 +92,7 @@ def scan_bgm() -> dict:
         result = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration,bit_rate",
              "-of", "default=nw=1", str(f)],
-            capture_output=True, text=True
+            capture_output=True, text=True, encoding="utf-8", errors="replace"
         )
         dur = 0.0
         bitrate_kbps = 0

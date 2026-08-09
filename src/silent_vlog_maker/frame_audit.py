@@ -43,7 +43,7 @@ def extract_frames_hires(
         result = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
              "-of", "default=nw=1:nk=1", str(clip_path)],
-            capture_output=True, text=True
+            capture_output=True, text=True, encoding="utf-8", errors="replace"
         )
         try:
             dur = float(result.stdout.strip())

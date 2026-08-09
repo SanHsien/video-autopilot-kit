@@ -1,5 +1,14 @@
 # 維護決策
 
+## 2026-08-09：Windows-first 是主要驗收契約
+
+**決定**：Windows 11 + PowerShell 作為主要開發、除錯與完整驗收環境；提交前以
+`tools/dev_check.ps1` 為 canonical gate。Programmatic path 仍維持 Linux/macOS 相容性，
+由 Ubuntu CI 提供第二平台證據，但不能取代 Windows full health。
+
+**理由**：本 fork 的差異集中在 CapCut Desktop、PowerShell 程序控制、CP950/UTF-8、CJK 路徑
+與 Windows ffmpeg。原 CI 只在 Ubuntu 跑 full health，無法證明主要採用路徑。
+
 ## 2026-08-09：建立可追蹤的長期 fork
 
 **決定**：fork `Hao0321/video-autopilot-kit`，保留 MIT 授權與完整歷史，以 upstream remote

@@ -11,6 +11,10 @@
 > voice 詞表、KPI 門檻與社群欄位要嘛是**空白模板**（`<fill in>` / `______` / 產出檔的 `{你的…}` 佔位字樣），要嘛**標示為「範例值」**，你填你的。
 > 反過來說：`knowledge/` 裡的方法論**是**原作者的實戰結論，那是刻意開源的部分 —— 是「怎麼想」，不是「他的數字」。
 
+> **SanHsien fork：Windows-first。** 主要開發、除錯、CapCut 整合與完整驗收都以
+> Windows 11 + PowerShell 為準；Programmatic path 仍維持 Linux/macOS 相容性，由 Ubuntu CI
+> 補跨平台驗證。開發環境與單一驗收指令見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
+
 ## 🧭 我該走哪條路？（3 秒決策樹）
 
 - **用 Mac / Linux？** → **Path 1 Programmatic**（純程式，跨平台，不碰 CapCut）
@@ -161,9 +165,11 @@ python examples/06_teardown.py            # 競品拆解數學：中位數騙人
 
 ## SanHsien fork 維護入口
 
-本 fork 保留原作者與完整上游歷史，另補 Windows 開發環境、pytest、CI、CodeQL、上游追蹤，
-並修復已確認的公開 quickstart 回歸。開發者請從 [`FORK.md`](FORK.md) 與
-[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) 開始；字幕服務整合與資料保留風險見
+本 fork 保留原作者與完整上游歷史，採 **Windows-first** 維護：Windows 11 + PowerShell 是
+主要開發／除錯／完整驗收環境，並補 pytest、Windows/Ubuntu CI、CodeQL、上游追蹤。
+開發者請從 [`FORK.md`](FORK.md)、[`REPO_REVIEW.md`](REPO_REVIEW.md) 與
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) 開始，提交前執行
+`pwsh -NoProfile -File tools\dev_check.ps1`；字幕服務整合與資料保留風險見
 [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md)。
 
 ## License

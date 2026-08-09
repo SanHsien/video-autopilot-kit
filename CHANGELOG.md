@@ -2,6 +2,15 @@
 
 ### Fixed
 
+- Made CapCut draft saves atomic across every existing root/timeline JSON, `.bak` and `.tmp`
+  replica; verification now checks the same complete set, UTF-8 BOM drafts load correctly, and
+  rapid saves keep distinct backups.
+- Made the Windows CapCut process guard fail closed: kill errors can no longer report success,
+  verification includes `CapCutHelper`, and PowerShell calls are bounded by a timeout.
+- Declared UTF-8 decoding for every captured subprocess text stream so CP950 Windows consoles do
+  not crash or corrupt ffmpeg errors for CJK paths.
+- Replaced production `assert` guards that disappeared under `python -O`, and made malformed
+  Shorts specs return blocking reports instead of raising indexing/type errors.
 - Restored the documented `DEFAULT_RULES`, `merge_rules()` and `rules=` calibration contract for
   the Shorts gate while retaining v0.12 readability, evidence and first-frame checks.
 - Updated `examples/04_shorts_gate.py` so its default, custom-band and Instagram scenarios pass
@@ -11,6 +20,8 @@
 
 ### Added
 
+- Windows-first repository review, canonical `tools/dev_check.ps1` gate, 20 new regression cases,
+  and full ffmpeg health on both Windows and Ubuntu CI.
 - Reproducible Windows development setup, pytest contract tests, CI, CodeQL, Dependabot,
   contribution/security files, upstream tracking and KIAO Voice integration guidance.
 

@@ -5,16 +5,18 @@ capcut_helpers.draft_io — Load / save / sync CapCut draft JSON (M18 7-file syn
 .bak / .tmp + Timelines/<UUID>/。任一不同步 → CapCut「載入」時用舊版覆蓋新版改動。
 """
 import json
+import os
 import shutil
+import tempfile
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 try:
-    from .paths import draft_path, discover_all_draft_jsons
+    from .paths import discover_all_draft_jsons, draft_path
 except ImportError:  # 直接 python src/capcut_helpers/draft_io.py 跑 self-test 時
     import sys as _sys
     _sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from capcut_helpers.paths import draft_path, discover_all_draft_jsons
+    from capcut_helpers.paths import discover_all_draft_jsons, draft_path
 
 # BOM + whitespace we strip before sniffing the first structural byte
 _JSON_HEAD_STRIP = b"\xef\xbb\xbf \t\r\n"
@@ -86,7 +88,7 @@ def detect_draft_format(path: Union[str, Path]) -> dict:
             "file": str(p),
         }
     try:
-        data = json.loads(raw.decode("utf-8"))
+        data = json.loads(raw.decode("utf-8-sig"))
     except (UnicodeDecodeError, json.JSONDecodeError):
         return {
             "encrypted": False,
@@ -125,13 +127,43 @@ def load_draft(project_name: str) -> dict:
     if not raw.lstrip(_JSON_HEAD_STRIP).startswith(b"{"):
         raise ValueError(_ENCRYPTED_DRAFT_MSG.format(path=p))
     try:
-        return json.loads(raw.decode("utf-8"))
+        return json.loads(raw.decode("utf-8-sig"))
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         raise ValueError(
             f"draft_content.json at {p} starts with '{{' but failed to parse as JSON "
             f"({e}). File may be corrupt or partially written — restore from .bak or "
             f"the _backup_<project> folder, or run detect_draft_format() for details."
         ) from e
+
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    """Write one replica atomically so an interrupted write cannot truncate it."""
+    temp_name = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            handle.write(text)
+            temp_name = handle.name
+        os.replace(temp_name, path)
+    finally:
+        if temp_name:
+            Path(temp_name).unlink(missing_ok=True)
+
+
+def _next_backup_path(backup_dir: Path, timestamp: str) -> Path:
+    """Return a collision-free backup name even for multiple saves per second."""
+    candidate = backup_dir / f"draft_content_{timestamp}.json"
+    counter = 2
+    while candidate.exists():
+        candidate = backup_dir / f"draft_content_{timestamp}_{counter}.json"
+        counter += 1
+    return candidate
 
 
 def save_draft_with_sync(project_name: str, draft: dict, backup: bool = True) -> list[Path]:
@@ -155,29 +187,22 @@ def save_draft_with_sync(project_name: str, draft: dict, backup: bool = True) ->
         backup_dir.mkdir(exist_ok=True)
         import time
         ts = time.strftime("%Y%m%d_%H%M%S")
-        shutil.copy(root_content, backup_dir / f"draft_content_{ts}.json")
+        shutil.copy2(root_content, _next_backup_path(backup_dir, ts))
 
     # Serialize once (separators=(",",":") matches CapCut's compact format)
     blob = json.dumps(draft, ensure_ascii=False, separators=(",", ":"))
 
+    # Root files are always created. Every existing .bak/.tmp/timeline replica
+    # must receive the same payload or CapCut can restore stale state on reopen.
+    targets = [root_content, root_info]
+    for path in discover_all_draft_jsons(project_name):
+        if path not in targets:
+            targets.append(path)
+
     written = []
-    # Write root_content (the file CapCut reads)
-    root_content.write_text(blob, encoding="utf-8")
-    written.append(root_content)
-
-    # Sync to root_info (the file capcut-cli writes — keep matching)
-    root_info.write_text(blob, encoding="utf-8")
-    written.append(root_info)
-
-    # Sync to Timelines/<UUID>/draft_content.json (per-timeline subfolder)
-    timelines = d / "Timelines"
-    if timelines.exists():
-        for sub in timelines.iterdir():
-            if sub.is_dir():
-                tl_dc = sub / "draft_content.json"
-                if tl_dc.exists():
-                    tl_dc.write_text(blob, encoding="utf-8")
-                    written.append(tl_dc)
+    for path in targets:
+        _atomic_write_text(path, blob)
+        written.append(path)
 
     return written
 
@@ -233,21 +258,19 @@ def verify_sync(project_name: str) -> dict:
         }
     """
     files = discover_all_draft_jsons(project_name)
-    json_files = [f for f in files if f.suffix == ".json" and not f.suffix.endswith(".bak")]
-
-    if not json_files:
+    if not files:
         return {"all_synced": False, "files_checked": 0, "mismatched": [], "reference_size": 0}
 
-    ref = json_files[0].read_bytes()
+    ref = files[0].read_bytes()
     ref_size = len(ref)
     mismatched = []
-    for f in json_files[1:]:
+    for f in files[1:]:
         if f.read_bytes() != ref:
             mismatched.append(f)
 
     return {
         "all_synced": len(mismatched) == 0,
-        "files_checked": len(json_files),
+        "files_checked": len(files),
         "mismatched": mismatched,
         "reference_size": ref_size,
     }

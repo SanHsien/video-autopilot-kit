@@ -28,6 +28,7 @@ def test_maintenance_skeleton_is_complete() -> None:
         "requirements-dev.txt",
         "requirements-optional.txt",
         "tools/check_upstream_updates.py",
+        "tools/dev_check.ps1",
         "tools/upstream_baseline.json",
     ]
 

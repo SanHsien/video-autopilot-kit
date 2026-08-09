@@ -233,6 +233,67 @@ def seg_bounds(spec: dict) -> list:
     return bounds
 
 
+def _validate_spec_shape(spec: dict) -> list[str]:
+    """Validate automation input before any indexing or numeric operations."""
+    failures = []
+    segs = spec.get("segs")
+    if not isinstance(segs, (list, tuple)) or not segs:
+        return ["SPEC segs 必須是非空 list/tuple"]
+
+    for index, seg in enumerate(segs):
+        if not isinstance(seg, (list, tuple)) or len(seg) != 3:
+            failures.append(f"SPEC segs[{index}] 必須是 (clip, in_sec, dur)")
+            continue
+        clip, in_sec, duration = seg
+        if not isinstance(clip, (str, os.PathLike)):
+            failures.append(f"SPEC segs[{index}] clip 必須是路徑")
+        for label, value in (("in_sec", in_sec), ("dur", duration)):
+            try:
+                number = float(value)
+            except (TypeError, ValueError):
+                failures.append(f"SPEC segs[{index}] {label} 必須是數字")
+                continue
+            if isinstance(value, bool) or not math.isfinite(number):
+                failures.append(f"SPEC segs[{index}] {label} 必須是有限數字")
+            elif label == "dur" and number <= 0:
+                failures.append(f"SPEC segs[{index}] dur 必須 > 0")
+
+    captions = spec.get("caps_by_seg")
+    if not isinstance(captions, (list, tuple)):
+        failures.append("SPEC caps_by_seg 必須是 list/tuple")
+        return failures
+    for index, caption in enumerate(captions):
+        if not isinstance(caption, (list, tuple)) or len(caption) != 3:
+            failures.append(
+                f"SPEC caps_by_seg[{index}] 必須是 (seg_idx, [(text, color)], kind)"
+            )
+            continue
+        seg_index, blocks, kind = caption
+        if (
+            not isinstance(seg_index, int)
+            or isinstance(seg_index, bool)
+            or not 0 <= seg_index < len(segs)
+        ):
+            failures.append(f"SPEC caps_by_seg[{index}] seg_idx 超出 segs 範圍")
+        if not isinstance(kind, str) or not kind:
+            failures.append(f"SPEC caps_by_seg[{index}] kind 必須是非空字串")
+        if not isinstance(blocks, (list, tuple)) or not blocks:
+            failures.append(f"SPEC caps_by_seg[{index}] blocks 不可為空")
+            continue
+        for block_index, block in enumerate(blocks):
+            if (
+                not isinstance(block, (list, tuple))
+                or len(block) != 2
+                or not all(isinstance(value, str) and value for value in block)
+            ):
+                failures.append(
+                    f"SPEC caps_by_seg[{index}] blocks[{block_index}] "
+                    "必須是非空 (text, color)"
+                )
+
+    return failures
+
+
 # ────────────────────────────────────────────── 總閘門
 
 def gate_shorts(spec: dict, rules: dict = None):
@@ -244,6 +305,7 @@ def gate_shorts(spec: dict, rules: dict = None):
     for k in ("place", "what", "addr"):
         if not spec.get(k):
             fails.append("S-A/E 缺 %s（開場識別/地址常駐是鐵則）" % k)
+    fails.extend(_validate_spec_shape(spec))
     if fails:
         return False, _report(fails, warns)
 

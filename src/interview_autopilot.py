@@ -169,7 +169,8 @@ def render(template_name: str, drop_marks=(), **fields) -> str:
     if not base.endswith(".template"):
         base += ".template"
     path = os.path.join(TPL_DIR, base + ".md")
-    assert os.path.exists(path), "找不到模板（templates/interview/ 是唯一 SoT）：" + path
+    if not os.path.exists(path):
+        raise FileNotFoundError("找不到模板（templates/interview/ 是唯一 SoT）：" + path)
     text = io.open(path, encoding="utf-8").read()
 
     text = _HOST_ONLY_RE.sub("", text)
@@ -179,7 +180,8 @@ def render(template_name: str, drop_marks=(), **fields) -> str:
     text = _PH_RE.sub(lambda m: str(fields.get(m.group(1).strip(), m.group(0))), text)
 
     left = sorted(set(_PH_RE.findall(text)))
-    assert not left, "%s 有未填欄位：%s" % (os.path.basename(path), "、".join(left))
+    if left:
+        raise ValueError("%s 有未填欄位：%s" % (os.path.basename(path), "、".join(left)))
     return re.sub(r"\n{3,}", "\n\n", text).lstrip("\n")
 
 
@@ -327,7 +329,8 @@ def plan(ep: str, record: str = None, publish: str = None,
 
     d = ep_dir(ep)
     gp = os.path.join(d, "_guest.py")
-    assert os.path.exists(gp), "還沒有 _guest.py，先跑 invite：" + gp
+    if not os.path.exists(gp):
+        raise FileNotFoundError("還沒有 _guest.py，先跑 invite：" + gp)
 
     import importlib.util
     m = importlib.util.spec_from_file_location("guest_%s" % ep, gp)
@@ -502,7 +505,7 @@ def _selftest() -> int:
         try:                                   # 少給欄位一定要擋（不准交出帶 (( )) 的檔）
             render("consent_form", EP="00")
             check("missing field blocked", False)
-        except AssertionError:
+        except ValueError:
             check("missing field blocked", True)
 
         if gate_plan is None:
@@ -569,7 +572,8 @@ def main():
             plan(a.ep, a.record, a.publish, compliance_ok=a.compliance_ok)
         else:
             build(a.ep)
-    except AssertionError as e:      # 閘門擋下 = 正常結果，不是 crash：印訊息就好
+    except (AssertionError, FileNotFoundError, ValueError) as e:
+        # 輸入/模板/閘門擋下 = 正常結果，不是 crash：印訊息就好。
         print("\n[GATE FAIL] %s" % e)
         return 1
     return 0
