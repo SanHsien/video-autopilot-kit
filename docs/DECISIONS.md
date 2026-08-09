@@ -1,5 +1,15 @@
 # 維護決策
 
+## 2026-08-09：上游 PR #1／#2 不重複合併
+
+**決定**：不 cherry-pick／merge 上游 PR #1 與 #2；兩者標記為已被 v0.12 後續實作
+supersede，評估證據記在 [`UPSTREAM.md`](UPSTREAM.md)。
+
+**理由**：兩個 PR 共同修的 `Path` import crash 已由現行函式內 lazy import 解決；PR #1 的
+私人 keyword map 也已演進成中性的 `EXAMPLE_KEYWORD_MAP` 與 zero-config filename matching，
+列出的私人 identifier 全數不存在。PR #1 對現行 upstream 已衝突，PR #2 套用後只會留下重複
+global import，沒有新增行為或測試價值。
+
 ## 2026-08-09：Windows-first 是主要驗收契約
 
 **決定**：Windows 11 + PowerShell 作為主要開發、除錯與完整驗收環境；提交前以

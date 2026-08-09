@@ -71,3 +71,10 @@ pwsh -NoProfile -File tools\dev_check.ps1
 - 沒有安裝 optional OCR 套件；無 OCR 的降級路徑已由 example 06 驗證。
 - CapCut Desktop 版本相容性仍以 `TROUBLESHOOTING.md` 的矩陣與使用者本機
   `detect_draft_format()` 結果為準，不能從程式碼 review 推定所有未來版本。
+
+## 上游 open PR 評估
+
+2026-08-09 另審查上游 PR [#1](https://github.com/Hao0321/video-autopilot-kit/pull/1) 與
+[#2](https://github.com/Hao0321/video-autopilot-kit/pull/2)。兩者處理的 import crash 與私人
+keyword map 已被現行 v0.12 實作完整取代，因此不重複合併；逐項證據與 skip 理由見
+[`docs/UPSTREAM.md`](docs/UPSTREAM.md)。
