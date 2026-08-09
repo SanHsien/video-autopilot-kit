@@ -42,6 +42,18 @@ python examples/06_teardown.py            # 競品拆解數學：中位數騙人
 要嘛太通用沒有方法論。這個 kit 給你**骨架**（經實戰的結構），
 `SETUP.md` 一區一區**問你問題**，用你的答案填滿它 —— 這樣它才真的是**你的**系統。
 
+## 🆕 v0.12.1 — Windows-first 可靠性版本
+
+- Windows 11 + PowerShell 成為主要開發與完整驗收環境；`tools/dev_check.ps1` 統一執行
+  Ruff、41 項 regression tests、compile 與 ffmpeg system health。
+- 強化 CapCut 原子寫入、程序關閉驗證、UTF-8/CJK subprocess 輸出，以及 `python -O`
+  下仍然有效的 production guards。
+- 加入 Windows／Ubuntu CI、CodeQL、Dependabot、開發／貢獻／安全文件與 upstream 追蹤。
+- 上游兩個既有 PR 已逐一評估，結論與未合併理由記錄於
+  [`REPO_REVIEW.md`](REPO_REVIEW.md) 與 [`docs/UPSTREAM.md`](docs/UPSTREAM.md)。
+
+完整修正清單 → [CHANGELOG](CHANGELOG.md)。
+
 ## 🆕 v0.12.0 新增 — 把「借來的數字」清出去
 
 這一版**沒有拿掉任何功能，拿掉的是借來的把握**。四個地方犯的是同一種錯：

@@ -1,4 +1,4 @@
-## Unreleased — SanHsien fork
+## v0.12.1 — SanHsien fork (2026-08-09)
 
 ### Fixed
 

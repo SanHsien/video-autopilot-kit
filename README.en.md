@@ -53,6 +53,20 @@ misleading) or stay too generic to have real methodology. This kit gives you the
 (a battle-tested structure); `SETUP.md` **asks you questions** one section at a time, and
 your answers fill it in — so it actually becomes **your** system.
 
+## 🆕 v0.12.1 — Windows-first reliability release
+
+- Windows 11 + PowerShell is now the primary development and full-validation environment;
+  `tools/dev_check.ps1` runs Ruff, 41 regression tests, compilation, and ffmpeg system health.
+- Hardened CapCut atomic writes and process-stop verification, UTF-8/CJK subprocess output,
+  and production guards that remain active under `python -O`.
+- Added Windows/Ubuntu CI, CodeQL, Dependabot, development/contribution/security guidance,
+  and upstream tracking.
+- Both existing upstream pull requests were evaluated individually; the conclusions and reasons
+  not to merge are recorded in [`REPO_REVIEW.md`](REPO_REVIEW.md) and
+  [`docs/UPSTREAM.md`](docs/UPSTREAM.md).
+
+Full change list → [CHANGELOG](CHANGELOG.md).
+
 ## 🆕 New in v0.12.0 — borrowed numbers, evicted
 
 This release **removes no capability. It removes borrowed certainty.** Four unrelated parts of
