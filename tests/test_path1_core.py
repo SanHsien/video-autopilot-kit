@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -16,14 +17,15 @@ def test_configure_bundled_tools_prepends_bin_directory(tmp_path, monkeypatch) -
 
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    (bin_dir / "ffmpeg.exe").write_bytes(b"MZ")
-    (bin_dir / "ffprobe.exe").write_bytes(b"MZ")
-    monkeypatch.setenv("PATH", "C:\\Windows\\System32")
+    suffix = ".exe" if os.name == "nt" else ""
+    (bin_dir / f"ffmpeg{suffix}").write_bytes(b"MZ")
+    (bin_dir / f"ffprobe{suffix}").write_bytes(b"MZ")
+    monkeypatch.setenv("PATH", str(tmp_path / "system"))
 
     resolved = configure_bundled_tools(tmp_path)
 
     assert resolved == bin_dir
-    assert str(bin_dir) == __import__("os").environ["PATH"].split(";")[0]
+    assert str(bin_dir) == os.environ["PATH"].split(os.pathsep)[0]
 
 
 def test_configure_bundled_tools_is_optional_in_source_mode(tmp_path) -> None:
