@@ -1,5 +1,19 @@
 # 維護決策
 
+## 2026-08-12：不直接合併上游 v0.13.0 updater／storage commits
+
+**決定**：將上游 `fb1fc8f`、`f4527c4`、`0aeaf48` 標記為已審查但不直接合併；PR #3
+維持 deferred。review watermark 推進到 `0aeaf48c19a7820741ccca3a4184b9d8bec816dc`，不表示程式已採用。
+
+**理由**：本 fork 與上游都已發布不同內容的 `v0.13.0`；上游 updater/channel/Skill 指向
+`Hao0321`，無法安全更新 `SanHsien` fork。正式上游 ZIP 又缺 `.gitignore`，manifest 私人路徑
+掃描沒有命中仍存在的 BGM 私人預設。storage lifecycle 的 current-only 方向值得保留，但會修改
+Shorts 成片命名，且目前 cleanup 在所有 fail-closed 驗證完成前就刪除中間檔。
+
+**後續採用門檻**：若要移植，另做 fork 專用 release identity/版本遷移；source archive 將
+`.gitignore` 設為 required；storage cleanup 改成 validate-first 並補失敗不刪檔、GUI/CLI 舊輸出
+相容與 rollback 測試。逐項證據見 [`UPSTREAM.md`](UPSTREAM.md)。
+
 ## 2026-08-09：Path 1 GUI 採薄層 Tkinter + 可攜單檔 EXE
 
 **決定**：以 `path1_core.py` 接回既有 Programmatic pipeline，`path1_gui.py` 只處理表單、

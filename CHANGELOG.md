@@ -1,3 +1,12 @@
+## Unreleased — upstream maintenance (2026-08-12)
+
+- Reviewed upstream v0.13.0 commits `fb1fc8f`, `f4527c4`, and `0aeaf48`, plus all current upstream
+  issues and pull requests. No runtime commit was merged because the upstream updater/release
+  identity and current-only storage contract need a fork-specific migration.
+- Recorded the live release-archive, private-path scanning, cleanup-ordering, tag-collision, and
+  draft PR #3 findings in `docs/UPSTREAM.md` / `docs/DECISIONS.md`; advanced the review watermark
+  to `0aeaf48c19a7820741ccca3a4184b9d8bec816dc` after isolated verification.
+
 ## v0.13.0 — Path 1 GUI (2026-08-09)
 
 ### Added

@@ -1,10 +1,10 @@
 # Repository review（Windows-first）
 
-- Review date: 2026-08-09
-- Review baseline: fork `3176b36169214a9987dc6c22fda54ede07e2429c`
-- Upstream reviewed through: `de4cef7b347127eeb378985755cd90586758adf5`
+- Review date: 2026-08-12
+- Review baseline: fork `98bccee637a1f9c0f2d89bcb29eab888210bcb6b`
+- Upstream reviewed through: `0aeaf48c19a7820741ccca3a4184b9d8bec816dc`
 - Primary environment: Windows 11、PowerShell、Python 3.14、ffmpeg 9
-- Status: v0.13.0 Path 1 GUI／EXE 已實作；本輪確認的 finding 均已修復
+- Status: v0.13.0 Path 1 GUI／EXE 維持全綠；上游 delta 已審查，阻擋項未帶入 fork
 
 ## 結論
 
@@ -12,8 +12,21 @@
 核心 gate 與真 ffmpeg health 都能在 Windows 執行；本輪主要風險不是剪輯演算法，而是
 CapCut 草稿一致性、Windows 程序驗證、CP950/UTF-8 邊界與自動流程的 fail-closed 行為。
 
-本輪沒有保留未修的 high/medium finding。Bandit medium/high 掃描為 0，`requirements-dev.txt`
-的 pip-audit 沒有已知漏洞。
+fork 現行 runtime 沒有保留未修的 high/medium finding。2026-08-09 的 Bandit medium/high 掃描
+為 0，`requirements-dev.txt` 的 pip-audit 沒有已知漏洞；2026-08-12 新列的 upstream findings
+是阻擋直接移植的採用條件，不代表已進入 fork runtime。
+
+## 2026-08-12 upstream delta review
+
+上游 v0.13.0 的 release manager、deterministic source archive 與 current-only storage lifecycle
+已在隔離 worktree 通過 compile、自帶 self-test、quick/full health 與 Bandit medium/high；正式
+release channel/archive hash 也一致。不過它不能直接成為本 fork 的更新來源：兩邊已有不同內容的
+同名 `v0.13.0`，updater/Skill channel 指向上游，正式 ZIP 漏掉 `.gitignore`，privacy deny pattern
+沒有抓到仍存在的私人 BGM path，cleanup 也在所有 policy validation 完成前刪 transient。
+
+因此三個新 `main` commits 均記為 reviewed/not merged；draft PR #3 因 skill root 重複、
+`final_v[N].mp4` 與 current-only 契約衝突而 deferred。完整逐項 ledger 與重審條件見
+[`docs/UPSTREAM.md`](docs/UPSTREAM.md)。
 
 ## v0.13.0 Path 1 GUI／EXE review
 
