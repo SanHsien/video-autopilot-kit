@@ -42,6 +42,13 @@
 - GUI 保持薄層；剪輯、QA 與量測規則留在既有核心，長工作不得阻塞 Tk 主執行緒。
 - EXE build 必須 fail-closed 檢查 ffmpeg/ffprobe 與授權文件，不封裝 `--enable-nonfree` build。
 
+## 文件責任
+
+- `README.md` / `README.en.md` 是公開產品與 fork 入口：說明用途、SanHsien-specific 差異、快速開始與安全邊界。
+- 不把每版 release notes、完整方法論或上游研究複製進 README；版本歷史放 `CHANGELOG.md`，方法論留在 `knowledge/` 與上游文件。
+- Fork 差異與維護理由放 `FORK.md`；同步策略放 `docs/UPSTREAM.md`；實作與驗收細節放 `docs/DEVELOPMENT.md` / `docs/PATH1_GUI.md`。
+- `REPO_REVIEW.md` 是風險快照，不是每個一般 bug 的流水帳；只有修正既有 review 項目或新問題改變風險結論時才更新。
+
 ## 常用指令
 
 ```powershell
