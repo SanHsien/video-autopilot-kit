@@ -57,11 +57,20 @@ def release_key(version: str) -> tuple[int, ...] | None:
 
 
 def is_newer_version(latest: str, declared: str) -> bool:
+    """Is `latest` newer than `declared` at the precision `declared` states?
+
+    A floor of `Pillow>=10` says nothing about the minor, so reporting 10.4.0
+    against it would be a standing false alarm -- and a monthly report that cries
+    wolf gets ignored. The comparison therefore happens at the depth the
+    declaration commits to: `>=10` on the major alone, `>=1.26` on major.minor.
+    """
     latest_key = release_key(latest)
     declared_key = release_key(declared)
     if latest_key is None or declared_key is None:
         return False
-    return latest_key > declared_key
+    depth = len(declared_key)
+    padded = latest_key + (0,) * (depth - len(latest_key))
+    return padded[:depth] > declared_key
 
 
 def parse_requirements(text: str, source: str) -> list[dict[str, str]]:

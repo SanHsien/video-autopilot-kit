@@ -64,6 +64,16 @@ def test_is_newer_version_compares_release_segments() -> None:
     assert not checker.is_newer_version("unknown", "1.26")
 
 
+def test_is_newer_version_respects_the_declared_precision() -> None:
+    # "Pillow>=10" claims nothing about the minor, so 10.4.0 is not a finding;
+    # 12.3.0 still is.
+    assert not checker.is_newer_version("10.4.0", "10")
+    assert checker.is_newer_version("12.3.0", "10")
+    # "rapidocr-onnxruntime>=1.4" is satisfied by 1.4.4 at its own precision.
+    assert not checker.is_newer_version("1.4.4", "1.4")
+    assert checker.is_newer_version("1.5.0", "1.4")
+
+
 def test_render_markdown_marks_each_status() -> None:
     rows: list[dict[str, object]] = [
         {

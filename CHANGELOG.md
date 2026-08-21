@@ -4,8 +4,9 @@
   every direct requirement in `requirements-path1.txt`, `-optional`, `-dev`, and `-build` is
   compared against the current PyPI release on the 1st of each month, and open Dependabot pull
   requests are appended to the same report. Dependabot answers "is there a newer release of this
-  one package"; nothing answered "how far behind is the runtime as a whole". The first run flags
-  eight aged floors, `numpy>=1.26` against 2.5.2 among them.
+  one package"; nothing answered "how far behind is the runtime as a whole". Comparison happens at
+  the precision a declaration commits to, so `Pillow>=10` is not reported against 10.4.0 every
+  month; the first run flags seven genuinely aged floors, `numpy>=1.26` against 2.5.2 among them.
 - The checker reads declarations only. It never inspects the installed environment and never edits
   a requirements file; widening a range still needs the suite plus a real EXE smoke run.
 
