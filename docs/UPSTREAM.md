@@ -134,14 +134,14 @@ Path 1（`path1_core.py`、`path1_gui.py`、EXE 打包）本批次上游完全�
 | [#1](https://github.com/Hao0321/video-autopilot-kit/pull/1) import crash + 清除作者 PII | **不引用：本 fork 已涵蓋，且做得更完整。** | 它把 `HAO_CAPTION_KEYWORD_MAP` 改名為 `DEFAULT_...` 並清掉註解裡的專案代號。本 fork `grep -rn "HAO_CAPTION_KEYWORD_MAP" src/` 已無命中，`src/capcut_helpers/` 也沒有 `#00x`／人名／地名等識別字串。方向與本 fork 一致，只是我們先做了。 |
 | [#2](https://github.com/Hao0321/video-autopilot-kit/pull/2) `text_style.py` 缺 pathlib import | **不引用：本 fork 沒有這個 bug。** | 本 fork 的 `from pathlib import Path` 在 `apps_glob` 分支內（`text_style.py:44`），呼叫前就已匯入。 |
 | [#3](https://github.com/Hao0321/video-autopilot-kit/pull/3) Harden production workflow | **維持 deferred**（2026-08-12 已判定）。仍是 draft，head 未變。 | 它新增第二套 `skills/video-autopilot/`，與上游已合併的 `codex-skill/video-autopilot/` 重複，且要求 `output/final_v[N].mp4`，違反 current-only 輸出契約。 |
-| [#13](https://github.com/Hao0321/video-autopilot-kit/pull/13) release v0.21.2 | **不追。** | 這是下一版 release 的 draft，合併後會成為 `main` 的 commit，由 commit 審查處理。但注意：本 fork 已於 2026-08-22 判定 v0.14–v0.21.1 整批不合併（見上方 U21-01～03），v0.21.2 大概率同理，屆時仍逐筆確認。 |
+| [#13](https://github.com/Hao0321/video-autopilot-kit/pull/13) release v0.21.2 | **不追。** | 這是下一版 release 的 draft，合併後會成為 `main` 的 commit，由 commit 審查處理。本 fork 已於 2026-08-22 判定 v0.14–v0.21.1 整批不合併（見上方 U21-01～03）。**v0.21.2 已於 2026-08-23 實查完畢**，結論同為不引用，逐項證據與觸發條件見下方同日段落。 |
 
 分支只有 2 個，都是上述 PR 的 head，沒有獨立資訊量。上游目前 0 個 open issue。
 
 ### 分支
 
-已逐一與上游預設分支比對（不是只數數量）：**沒有任何分支帶著獨佔 commit**——上游的分支都是
-open PR 的 head，或已完全併回預設分支。所以分支這個面向本輪沒有可引用的東西。
+已逐一與上游預設分支比對（不是只數數量）。**這段當時的敘述有誤，已於 2026-08-23 更正**：
+`release/v0.21.2` 帶著 1 個獨佔 commit（`62f44e6`）。兩條分支都是 open PR 的 head，結論不變。
 
 ### 水位
 
@@ -149,3 +149,28 @@ open PR 的 head，或已完全併回預設分支。所以分支這個面向本�
 - issue：**0 個**，`reviewed_issue_through` 記 0 表示「盤點過、當時沒有」
 - 記在 `tools/upstream_baseline.json`。
 
+## 2026-08-23：把 v0.21.2 的「大概率同理」換成實查結果
+
+上一輪對 PR #13（release v0.21.2）寫的是「大概率同理，屆時仍逐筆確認」。那是預測，不是結論。
+今天實際打開 `62f44e6` 逐項看完，結論仍是**不引用**，但理由現在可以查證：
+
+| 檢查 | 實查結果 |
+| --- | --- |
+| U21-01（共用模組被改回私人工作副本）是否已改善 | **沒有。** 在 `upstream/release/v0.21.2` 的 `src/` 底下：`Hao0321` 命中 4 個檔、`hao0321` 1 個、`馬來西亞` 6 個、`桃園機場` 2 個、`IMG_5998` 1 個，專案代號 `#000`–`#006` 仍散在 `text_style.py`（7 次）、`color_calibration_lab.py`、`composition_runtime.py`、`knowledge_lifecycle.py`、`review_loop.py` 等。本 fork 是公開 repo 且已把這些字串中性化，合併等於倒退。 |
+| U21-02（改動綁在本 fork 沒有的新架構上）是否仍成立 | **仍成立，而且更明顯。** 這一版的主題是 caption 的 `chip` 種類與 `persistent_label_policy: intro`，兩者的渲染端在 `src/caption_director.py`——**本 fork 沒有這個檔案**。`src/publish_hub.py`（+69）同樣不存在於本 fork。只搬 `shorts_gate.py` 那 25 行會讓 gate 放行一種本 fork 渲染不出來的字幕。 |
+| 是否有可獨立取用的錯誤修正 | **沒有。** 逐檔看過：`shorts_autopilot.py` 的 +186 行是新功能（editorial fingerprint，schema 名為 `hao.editorial-fingerprint/v1`／`hao.motion-composition/v1`，連 schema 名都帶作者識別）；`caption_director.py`／`shorts_gate.py` 是新增 `chip` 種類；`motion_asset_pack.py`、`mediastorm_craft.py`、`silent_vlog_maker/shorts_vertical.py` 跟著同一條線。沒有一筆是「本 fork 也有的缺陷」。 |
+
+**觸發條件**（下次什麼情況要回來重看）：上游把 `src/` 的私人識別字串清乾淨（重跑上表第一列的
+五個 grep 應為零命中），或本 fork 自行實作 `caption_director` 等對應層。兩者發生前，這一批不必
+再評估。
+
+### 更正上一輪的分支敘述
+
+上一輪的「分支」小節寫「沒有任何分支帶著獨佔 commit」。**那句話是錯的**：`release/v0.21.2`
+相對 `upstream/main` 有 1 個獨佔 commit（`62f44e6`），也就是本段評估的對象。正確的說法是：
+上游 2 條分支都是 open PR 的 head，其中 `release/v0.21.2` 帶有尚未併入 `main` 的 release commit。
+
+### 增量
+
+`6dc9ad8`（水位）之後 `upstream/main` **0 個新 commit**；open PR 最大仍是 #13、open issue 仍為 0，
+水位不動。

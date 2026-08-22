@@ -1,5 +1,23 @@
 # 維護決策
 
+## 2026-08-23：實查 v0.21.2（PR #13），維持不引用
+
+**決定**：`reviewed_date` 推進到 2026-08-23，`reviewed_through` 不動。上游 `release/v0.21.2`
+（`62f44e6`）逐項看完，仍不引用。
+
+**理由（三項都實查過，不是類推）**：
+1. 拒絕 v0.14–v0.21.1 的主因（共用模組帶私人識別字串）在 v0.21.2 **仍然成立**：`src/` 底下
+   `Hao0321` 4 檔、`馬來西亞` 6 檔、`桃園機場` 2 檔、`IMG_5998` 1 檔，專案代號 `#000`–`#006`
+   散在五個檔案。本 fork 是公開 repo 且已中性化，合併等於倒退。
+2. 這一版的主題（caption `chip` 種類、`persistent_label_policy: intro`）渲染端在
+   `src/caption_director.py`，**本 fork 沒有這個檔案**；`src/publish_hub.py` 同樣沒有。只搬
+   `shorts_gate.py` 的 25 行會讓 gate 放行本 fork 渲染不出來的字幕。
+3. 逐檔確認**沒有可獨立取用的錯誤修正**：`shorts_autopilot.py` 的 +186 行是新功能
+   （editorial fingerprint，schema 名 `hao.editorial-fingerprint/v1`），其餘檔案跟著同一條線。
+
+**觸發條件**：上游把 `src/` 的私人識別字串清乾淨，或本 fork 自行實作 `caption_director`
+對應層。在那之前這一批不需要再評估。
+
 ## 2026-08-22：不合併上游 v0.14–v0.21.1 批次（11 commits）
 
 **決定**：`fc4d818` 到 `6dc9ad8` 共 11 個上游提交標記為已審查、整批不合併，review

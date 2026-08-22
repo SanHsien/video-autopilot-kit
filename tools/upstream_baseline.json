@@ -2,8 +2,8 @@
   "repo": "https://github.com/Hao0321/video-autopilot-kit.git",
   "branch": "main",
   "reviewed_through": "6dc9ad8b3dc9b2ef158e4eac835f5f721e5b3bed",
-  "reviewed_date": "2026-08-22",
-  "notes": "Reviewed upstream v0.14 through v0.21.1 (11 commits, 216 files, +42129/-1576). Nothing was merged: the batch republishes shared modules with the author's personal identifiers restored, and the shared-file changes now depend on the new visual master / publish hub architecture this fork does not ship. Evidence and the adoption bar are in docs/DECISIONS.md and docs/UPSTREAM.md.",
+  "reviewed_date": "2026-08-23",
+  "notes": "Reviewed upstream v0.14 through v0.21.1 (11 commits, 216 files, +42129/-1576). Nothing was merged: the batch republishes shared modules with the author's personal identifiers restored, and the shared-file changes now depend on the new visual master / publish hub architecture this fork does not ship. Evidence and the adoption bar are in docs/DECISIONS.md and docs/UPSTREAM.md. 2026-08-23：main 增量 0，水位未動；PR #13（release v0.21.2, 62f44e6）已實查完畢——私人識別字串仍在 src/、改動綁在本 fork 沒有的 caption_director/publish_hub 上、無可獨立取用的修正，結論不引用，觸發條件記在 docs/UPSTREAM.md。",
   "reviewed_pr_through": 13,
   "reviewed_issue_through": 0
 }
