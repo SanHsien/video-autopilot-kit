@@ -73,10 +73,44 @@ def is_newer_version(latest: str, declared: str) -> bool:
     return padded[:depth] > declared_key
 
 
+HOLD_MARKER = "freshness-hold:"
+DEFERRALS_PATH = REPO_ROOT / ".github" / "dependency-deferrals.json"
+
+
+def load_deferrals(path: Path = DEFERRALS_PATH) -> dict[str, tuple[str, str]]:
+    """Read reviewed-but-not-now decisions: package -> (reviewed release, reason).
+
+    The reviewed release makes a deferral expire by itself: once PyPI moves past
+    it the report asks again, so a deferral cannot quietly become a silenced
+    check. An entry without it is ignored for exactly that reason.
+    """
+    try:
+        entries = json.loads(path.read_text(encoding="utf-8")).get("deferrals", {})
+    except (OSError, ValueError):
+        return {}
+    deferrals: dict[str, tuple[str, str]] = {}
+    for name, entry in (entries or {}).items():
+        if not isinstance(entry, dict):
+            continue
+        latest = str(entry.get("deferredLatest", "")).strip()
+        reason = str(entry.get("reason", "")).strip()
+        if latest and reason:
+            deferrals[name.lower()] = (latest, reason)
+    return deferrals
+
+
+def needs_review(row: dict[str, object]) -> bool:
+    """An aged floor still counts unless a hold or a live deferral covers it."""
+    return bool(row["outdated"]) and not row.get("hold") and not row.get("deferred_reason")
+
+
 def parse_requirements(text: str, source: str) -> list[dict[str, str]]:
     packages: list[dict[str, str]] = []
     for raw_line in text.splitlines():
-        line = raw_line.split("#", 1)[0].strip()
+        line, _, comment = raw_line.partition("#")
+        line = line.strip()
+        comment = comment.strip()
+        hold = comment[len(HOLD_MARKER) :].strip() if comment.startswith(HOLD_MARKER) else ""
         # "-r requirements-path1.txt" is followed separately; expanding it here
         # would list numpy and Pillow twice.
         if not line or line.startswith("-"):
@@ -89,6 +123,7 @@ def parse_requirements(text: str, source: str) -> list[dict[str, str]]:
         minimum = _MINIMUM_RE.search(specifiers)
         packages.append(
             {
+                "hold": hold,
                 "name": name,
                 "minimum": minimum.group(2) if minimum else "",
                 "requirement": line,
@@ -129,15 +164,26 @@ def fetch_pypi_version(package_name: str, timeout: float = 10.0) -> str | None:
     return str(version) if version else None
 
 
-def collect_status(packages: list[dict[str, str]]) -> list[dict[str, object]]:
+def collect_status(
+    packages: list[dict[str, str]],
+    deferrals: dict[str, tuple[str, str]] | None = None,
+) -> list[dict[str, object]]:
+    deferrals = deferrals if deferrals is not None else load_deferrals()
     rows: list[dict[str, object]] = []
     for package in packages:
         minimum = package["minimum"]
         latest = fetch_pypi_version(package["name"])
+        reviewed, reason = deferrals.get(package["name"].lower(), ("", ""))
+        deferred_reason = (
+            reason
+            if reviewed and latest and not is_newer_version(str(latest), reviewed)
+            else ""
+        )
         rows.append(
             {
                 **package,
                 "latest": latest or "unknown",
+                "deferred_reason": deferred_reason,
                 "outdated": bool(minimum and latest and is_newer_version(latest, minimum)),
                 "check_failed": not minimum or latest is None,
             }
@@ -160,6 +206,10 @@ def render_markdown(rows: list[dict[str, object]], error: str | None = None) -> 
     for row in rows:
         if row["check_failed"]:
             status = "CHECK FAILED"
+        elif row["outdated"] and row.get("hold"):
+            status = f"HELD: {row['hold']}"
+        elif row["outdated"] and row.get("deferred_reason"):
+            status = f"DEFERRED at {row['latest']}: {row['deferred_reason']}"
         elif row["outdated"]:
             status = "REVIEW UPDATE"
         else:
@@ -192,7 +242,7 @@ def write_github_output(rows: list[dict[str, object]], report_path: Path) -> Non
     output_path = os.environ.get("GITHUB_OUTPUT")
     if not output_path:
         return
-    outdated = any(bool(row["outdated"]) for row in rows)
+    outdated = any(needs_review(row) for row in rows)
     check_failed = not rows or any(bool(row["check_failed"]) for row in rows)
     with open(output_path, "a", encoding="utf-8") as output:
         output.write(f"outdated={'true' if outdated else 'false'}\n")
@@ -234,7 +284,7 @@ def main() -> int:
         write_github_output(rows, output_path)
     if error:
         return 2
-    if args.strict and any(bool(row["outdated"]) or bool(row["check_failed"]) for row in rows):
+    if args.strict and any(needs_review(row) or bool(row["check_failed"]) for row in rows):
         return 1
     return 0
 
