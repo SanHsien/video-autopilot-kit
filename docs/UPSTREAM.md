@@ -124,3 +124,23 @@ rg -n -i "hao0321|game\.hao0321|HAO SURVIVOR|01-42-43|01-44-29|01-44-04" src\cap
 | U21-03 | Medium | `src/system_health.py` 被改寫成精簡版，移除 TESTS／IMPORT_SANITY／CORE_FILES 三類分開報告與真 ffmpeg 測試集。 | 保留 fork 版本。上游版是降級，不採用。 |
 
 Path 1（`path1_core.py`、`path1_gui.py`、EXE 打包）本批次上游完全沒有變更。
+
+## 2026-08-22：上游 PR、issue、分支盤點
+
+盤點當時上游有 **4 個 open PR、0 個 open issue、2 個分支**。之後只看編號更大的，不必重看這批。
+
+| 上游 PR | 結論 | 理由（附證據） |
+| --- | --- | --- |
+| [#1](https://github.com/Hao0321/video-autopilot-kit/pull/1) import crash + 清除作者 PII | **不引用：本 fork 已涵蓋，且做得更完整。** | 它把 `HAO_CAPTION_KEYWORD_MAP` 改名為 `DEFAULT_...` 並清掉註解裡的專案代號。本 fork `grep -rn "HAO_CAPTION_KEYWORD_MAP" src/` 已無命中，`src/capcut_helpers/` 也沒有 `#00x`／人名／地名等識別字串。方向與本 fork 一致，只是我們先做了。 |
+| [#2](https://github.com/Hao0321/video-autopilot-kit/pull/2) `text_style.py` 缺 pathlib import | **不引用：本 fork 沒有這個 bug。** | 本 fork 的 `from pathlib import Path` 在 `apps_glob` 分支內（`text_style.py:44`），呼叫前就已匯入。 |
+| [#3](https://github.com/Hao0321/video-autopilot-kit/pull/3) Harden production workflow | **維持 deferred**（2026-08-12 已判定）。仍是 draft，head 未變。 | 它新增第二套 `skills/video-autopilot/`，與上游已合併的 `codex-skill/video-autopilot/` 重複，且要求 `output/final_v[N].mp4`，違反 current-only 輸出契約。 |
+| [#13](https://github.com/Hao0321/video-autopilot-kit/pull/13) release v0.21.2 | **不追。** | 這是下一版 release 的 draft，合併後會成為 `main` 的 commit，由 commit 審查處理。但注意：本 fork 已於 2026-08-22 判定 v0.14–v0.21.1 整批不合併（見上方 U21-01～03），v0.21.2 大概率同理，屆時仍逐筆確認。 |
+
+分支只有 2 個，都是上述 PR 的 head，沒有獨立資訊量。上游目前 0 個 open issue。
+
+### 水位
+
+- PR：已看到 **#13**（`reviewed_pr_through`）
+- issue：**0 個**，`reviewed_issue_through` 記 0 表示「盤點過、當時沒有」
+- 記在 `tools/upstream_baseline.json`。
+

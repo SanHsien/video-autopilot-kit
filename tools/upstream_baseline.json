@@ -3,5 +3,7 @@
   "branch": "main",
   "reviewed_through": "6dc9ad8b3dc9b2ef158e4eac835f5f721e5b3bed",
   "reviewed_date": "2026-08-22",
-  "notes": "Reviewed upstream v0.14 through v0.21.1 (11 commits, 216 files, +42129/-1576). Nothing was merged: the batch republishes shared modules with the author's personal identifiers restored, and the shared-file changes now depend on the new visual master / publish hub architecture this fork does not ship. Evidence and the adoption bar are in docs/DECISIONS.md and docs/UPSTREAM.md."
+  "notes": "Reviewed upstream v0.14 through v0.21.1 (11 commits, 216 files, +42129/-1576). Nothing was merged: the batch republishes shared modules with the author's personal identifiers restored, and the shared-file changes now depend on the new visual master / publish hub architecture this fork does not ship. Evidence and the adoption bar are in docs/DECISIONS.md and docs/UPSTREAM.md.",
+  "reviewed_pr_through": 13,
+  "reviewed_issue_through": 0
 }
