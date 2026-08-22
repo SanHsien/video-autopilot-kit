@@ -75,3 +75,15 @@ pwsh -NoProfile -File tools\dev_check.ps1
 - 決策：`docs/DECISIONS.md`
 - 外部字幕整合：`docs/INTEGRATIONS.md`
 - 貢獻與安全：`CONTRIBUTING.md`、`SECURITY.md`
+
+## 對外邊界：PR 只打本 fork
+
+- **PR、push、release 一律指向 `SanHsien/video-autopilot-kit`。** 對上游 `Hao0321/video-autopilot-kit` 開 PR、push 或發 release
+  需要主人在當次對話明確同意回貢；「fork 一份」「建開發環境」「比照其他 repo」都不是同意。
+- 根因是機制不是粗心：`gh` 在 fork clone 的**預設 repo 就是上游**（`gh repo set-default --view` 會回
+  `Hao0321/video-autopilot-kit`），裸跑 `gh pr create` 必然打上去。每個 clone 先跑一次
+  `gh repo set-default SanHsien/video-autopilot-kit`。
+- 開 PR 仍明寫 `gh pr create --repo SanHsien/video-autopilot-kit --base <分支> --head <分支>`，並**讀輸出的 URL**，
+  owner 必須是 `SanHsien`。不是就立刻 `gh pr close` 留言道歉說明，再對 origin 重開。
+- 2026-08-22 一天內兩個工作階段各誤開一個上游 PR（`lidge-jun/opencodex#2373`、
+  `hamanpaul/paulsha-cortex#787`）。批次跑多個 repo 時最容易略過確認，而那正是兩次出事的場合。
