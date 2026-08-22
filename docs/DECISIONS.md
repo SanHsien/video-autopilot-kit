@@ -1,5 +1,39 @@
 # 維護決策
 
+## 2026-08-22：不合併上游 v0.14–v0.21.1 批次（11 commits）
+
+**決定**：`fc4d818` 到 `6dc9ad8` 共 11 個上游提交標記為已審查、整批不合併，review
+watermark 推進到 `6dc9ad8b3dc9b2ef158e4eac835f5f721e5b3bed`。watermark 只代表審查過，
+不代表採用。
+
+**理由**：這批是 216 個檔案、+42,129/-1,576 行的產品線重寫（visual director、3D、
+tracked graphics、publish hub、code-cleanup-helper skill）。兩件事讓它不能整批合併、
+也不能逐檔挑：
+
+1. **會把個人／私人識別字串帶回公開 fork。** 上游看來是從作者的私人工作副本重新
+   發布：本 fork 已中性化的共用模組又被改回去。實際命中——`Hao0321`／`hao0321` 7 次、
+   專案代號 `#000`–`#006` 18 次、`馬來西亞` 7 次、`桃園機場` 2 次、`IMG_5998` 1 次，
+   全在 `src/` 的共用檔案裡（`scene_audit.py`、`frame_audit.py`、`text_overlay.py` 等）。
+2. **共用檔案的改動已綁在新架構上。** 例如 `effects.py` 的 `apply_cinematic_grade()`
+   改成呼叫 `visual_master.lut_filter_for_plan()`；其他共用檔新增
+   `art_direction`、`project_paths`、`publish_hub`、`editorial_templates` 等 import。
+   要挑其中一支就得把整條上游產品線帶進來，而那正是本 fork 決定不走的方向。
+
+另外 `src/system_health.py` 被上游改寫成單行 docstring 的精簡版，移掉了本 fork
+TESTS／IMPORT_SANITY／CORE_FILES 三類分開報告與真 ffmpeg 測試集——那是本 fork 的
+穩定性中樞，降級採用沒有理由。Path 1（本 fork 的產品：GUI 與可攜 EXE）上游完全沒碰。
+
+**審查方式**（以便日後判斷這份結論的強度）：比對 baseline→`upstream/main` 的完整檔案
+交集（28 個共用檔、約 2,600 行）、逐檔 numstat、共用檔的新增 import 掃描、私人識別字串
+掃描，並實讀 `effects.py`、`system_health.py`、`scene_audit.py`、`frame_audit.py`、
+`text_overlay.py` 的差異。未逐行讀完 2,600 行——結論是「整批因結構性理由不採用」，
+不是「逐行確認每個改動都無價值」。
+
+**後續採用門檻**：上游若把個人識別字串清出共用模組，或本 fork 決定引進 visual
+master／publish hub 架構，屆時以當時的上游程式重新評估，不沿用本次結論。單獨想要的
+能力（例如 word captions 時間軸、shorts gate 檢查）以本 fork 自己的實作補，不 cherry-pick。
+
+
 ## 2026-08-12：不直接合併上游 v0.13.0 updater／storage commits
 
 **決定**：將上游 `fb1fc8f`、`f4527c4`、`0aeaf48` 標記為已審查但不直接合併；PR #3

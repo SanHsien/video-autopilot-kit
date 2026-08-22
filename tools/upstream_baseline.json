@@ -1,7 +1,7 @@
 {
   "repo": "https://github.com/Hao0321/video-autopilot-kit.git",
   "branch": "main",
-  "reviewed_through": "0aeaf48c19a7820741ccca3a4184b9d8bec816dc",
-  "reviewed_date": "2026-08-12",
-  "notes": "Reviewed upstream v0.13.0 commits and PRs through #6. No commit was merged because the updater, release identity, storage contract, and fork-only Path 1 product need a separate migration; decisions are recorded in docs/UPSTREAM.md and docs/DECISIONS.md."
+  "reviewed_through": "6dc9ad8b3dc9b2ef158e4eac835f5f721e5b3bed",
+  "reviewed_date": "2026-08-22",
+  "notes": "Reviewed upstream v0.14 through v0.21.1 (11 commits, 216 files, +42129/-1576). Nothing was merged: the batch republishes shared modules with the author's personal identifiers restored, and the shared-file changes now depend on the new visual master / publish hub architecture this fork does not ship. Evidence and the adoption bar are in docs/DECISIONS.md and docs/UPSTREAM.md."
 }

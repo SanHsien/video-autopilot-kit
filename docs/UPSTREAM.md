@@ -94,3 +94,33 @@ rg -n -i "hao0321|game\.hao0321|HAO SURVIVOR|01-42-43|01-44-29|01-44-04" src\cap
 
 第二個指令預期找不到結果（exit 1）。本輪沒有推進 `tools/upstream_baseline.json`：兩個 PR
 都不是 `upstream/main` 的新 commit，baseline 仍正確代表 main 已審查到的 SHA。
+
+## 2026-08-22：上游 v0.14–v0.21.1 批次審查
+
+本輪從 `0aeaf48` 審到 `6dc9ad8`，共 11 個 commits、216 檔案、+42,129/-1,576 行。
+結論是整批不合併，watermark 推進到 `6dc9ad8`；決策全文見
+[`DECISIONS.md`](DECISIONS.md)。
+
+| Commit | 主題 | 結論 |
+|---|---|---|
+| `fc4d818` | publish complete video autopilot architecture (#7) | 不合併 |
+| `9c93c9a` | normalize skill sync across platforms | 不合併 |
+| `874cf7d` | v0.14 design and 3D systems (#8) | 不合併 |
+| `5b00400` | v0.15 templates and cinematic craft (#9) | 不合併 |
+| `0a44171` | v0.16 unified publishing hub (#10) | 不合併 |
+| `ec08927` | v0.16 migration metadata (#11) | 不合併（只動上游 release manifest） |
+| `3e705ad` | architecture v6.3 cleanup gate (#12) | 不合併 |
+| `1bce604` | v0.19 architecture v7 and unified publishing | 不合併 |
+| `59b78cc` | ignore local workflow drafts | 不合併（只動上游 `.gitignore`） |
+| `cdb2524` | self-authored motion runtime v0.21.0 | 不合併 |
+| `6dc9ad8` | v0.21.1 patch | 不合併 |
+
+### 阻擋合併的 findings
+
+| ID | 嚴重度 | Finding | 處理 |
+|---|---|---|---|
+| U21-01 | High | 上游把共用模組改回私人工作副本的樣子：`src/` 的共用檔案裡出現 `Hao0321`／`hao0321` 7 次、專案代號 `#000`–`#006` 18 次、`馬來西亞` 7 次、`桃園機場` 2 次、`IMG_5998` 1 次。本 fork 是公開 repo，且先前已把這些字串中性化。 | 不採用上游版本的共用檔案。日後若上游清乾淨，再以當時的程式重新評估。 |
+| U21-02 | High | 共用檔案的改動綁在新架構上：`effects.py` 的 `apply_cinematic_grade()` 改呼叫 `visual_master.lut_filter_for_plan()`，其他共用檔新增 `art_direction`、`project_paths`、`publish_hub`、`editorial_templates` 等 import。 | 無法逐檔 cherry-pick。想要的個別能力以本 fork 自己的實作補。 |
+| U21-03 | Medium | `src/system_health.py` 被改寫成精簡版，移除 TESTS／IMPORT_SANITY／CORE_FILES 三類分開報告與真 ffmpeg 測試集。 | 保留 fork 版本。上游版是降級，不採用。 |
+
+Path 1（`path1_core.py`、`path1_gui.py`、EXE 打包）本批次上游完全沒有變更。
