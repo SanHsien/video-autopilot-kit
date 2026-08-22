@@ -1,3 +1,16 @@
+## Unreleased — the 3.9 CI leg can install its tools again (2026-08-22)
+
+- The previous entry's floors broke the Ubuntu / Python 3.9 job: `pre-commit` 4.4 and `pytest` 9 both
+  dropped 3.9, so `pip install -r requirements-dev.txt` could resolve nothing and CI went red. README
+  promises 3.9+, and that job is what backs the promise, so the fix is to keep the promise rather than
+  drop the leg.
+- `pre-commit` and `pytest` are now declared twice, gated by `python_version`: the 3.10+ line carries the
+  floors CI resolves on 3.14, the 3.9 line pins the last release series that still supports it
+  (`pre-commit>=4.3,<4.4`, `pytest>=8.4,<9`). `pytest-cov` and `ruff` still support 3.9 unchanged.
+- Verified with `uv pip compile` on both ends: 3.9 resolves pre-commit 4.3.0 / pytest 8.4.2, and 3.14
+  resolves 4.6.2 / 9.1.1. 75 tests pass locally and the freshness check is green — it reads the first
+  declaration per package, which is the forward-looking one.
+
 ## Unreleased — dependency declarations match what CI runs (2026-08-22)
 
 - The first freshness run flagged seven aged floors. None of them was a missed upgrade: CI installs these

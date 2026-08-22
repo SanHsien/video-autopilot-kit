@@ -1,4 +1,10 @@
-pre-commit>=4.6,<5
-pytest>=9.1,<10
+# README 宣告支援 Python 3.9+，CI 的 ubuntu leg 就是用來證明這件事的。
+# pre-commit 4.4 與 pytest 9 都改成只支援 3.10+，所以這兩個工具分兩段宣告：
+# 前一行是主線（CI 在 3.14 上實際解析到的版本），後一行是 3.9 的相容尾巴。
+# 依賴新鮮度檢查只看同名套件的第一行，也就是主線那條。
+pre-commit>=4.6,<5; python_version >= "3.10"
+pre-commit>=4.3,<4.4; python_version < "3.10"
+pytest>=9.1,<10; python_version >= "3.10"
+pytest>=8.4,<9; python_version < "3.10"
 pytest-cov>=7.1,<8
 ruff>=0.16,<1
