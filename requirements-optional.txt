@@ -1,6 +1,6 @@
 # Programmatic video pipeline
-numpy>=1.26
-Pillow>=10
+numpy>=2.5
+Pillow>=12.3
 
 # Burned-in caption OCR used by src/teardown.py
 opencc-python-reimplemented>=0.1.7

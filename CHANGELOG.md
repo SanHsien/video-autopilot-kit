@@ -1,3 +1,18 @@
+## Unreleased — dependency declarations match what CI runs (2026-08-22)
+
+- The first freshness run flagged seven aged floors. None of them was a missed upgrade: CI installs these
+  requirement files unpinned, so it has been resolving `numpy` 2.5.2, `Pillow` 12.3.0, `pytest` 9.1.1,
+  `pytest-cov` 7.1.0, `ruff` 0.16.4, `pre-commit` 4.6.2, and `PyInstaller` 6.22.2 all along. The
+  declarations were the stale part — `numpy>=1.26` claimed support for a 1.x line nothing has tested in
+  months.
+- Floors now name the versions CI actually resolves: `numpy>=2.5`, `Pillow>=12.3`, `pre-commit>=4.6,<5`,
+  `pytest>=9.1,<10`, `pytest-cov>=7.1,<8`, `ruff>=0.16,<1`, `PyInstaller>=6.22,<7`. The ruff pin inside
+  `.pre-commit-config.yaml` moves with them, since the freshness checker only reads requirements files and
+  would not have caught it drifting.
+- Verified in a clean venv built from the new declarations (numpy 2.5.2, Pillow 12.3.0): 75 tests pass, and
+  `ruff check` is clean over both the CI scope (`tests tools`) and the wider pre-commit scope. The 563
+  findings ruff reports across the whole tree are in the legacy files both scopes deliberately exclude.
+
 ## Unreleased — dependency freshness schedule (2026-08-21)
 
 - Added `tools/check_dependency_freshness.py` and `.github/workflows/dependency-freshness.yml`:

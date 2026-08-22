@@ -19,7 +19,7 @@ repos:
         name: Ruff (maintained code)
         entry: python -m ruff check path1_core.py path1_gui.py build_exe.py tests tools
         language: python
-        additional_dependencies: ["ruff>=0.12,<1"]
+        additional_dependencies: ["ruff>=0.16,<1"]
         pass_filenames: false
       - id: pytest
         name: Focused pytest suite
