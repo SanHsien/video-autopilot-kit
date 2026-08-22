@@ -16,7 +16,7 @@
 
 - `origin/main`：SanHsien 維護線。
 - `upstream/main`：Hao0321 原始專案。
-- 功能與修正使用短期分支；驗證通過後再合併到 `main`。
+- 一般變更直接推 `origin/main`，不開功能分支、不開維護 PR（主人 2026-08-22 指示，全庫一致）。只有在需要他人審查、或改動風險高到值得先讓 CI 在 PR 上跑一輪時，才退回 **branch → PR → CI**。
 
 同步方式與審查清冊見 [`docs/UPSTREAM.md`](docs/UPSTREAM.md)。fork 專屬決策見
 [`docs/DECISIONS.md`](docs/DECISIONS.md)。最近一次完整 repo review 見
