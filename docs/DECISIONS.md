@@ -160,3 +160,68 @@ commit 水位。那兩個面向不是「查過沒發現」，是根本沒查，�
 綠燈不是「沒有待辦」，是沒有人看。
 
 **觸發條件**：報告列出項目時逐筆讀 diff、把採用／略過理由寫進本檔，然後才推進 baseline 的水位。
+
+
+## 2026-08-30：上游 21 個 commit 的分類審視（未推進 commit 水位）
+
+先前對這個 repo 的常設略過理由是「共用模組仍帶私人識別字串，本 fork 是公開 repo」，
+觸發條件寫的是「上游清乾淨」。本輪實查該條件與 21 個新 commit。
+
+### 觸發條件：仍未成立，但範圍已縮小
+
+上游 tip 仍帶 `Hao0321`（11 檔）與「馬來西亞」（2 檔）。**但落在 `src/` 的只剩三個檔案**，
+而且**本 fork 一個都沒有**：
+
+| 上游檔案 | 本 fork |
+| --- | --- |
+| `src/release_manager.py` | 無 |
+| `src/silent_vlog_maker/checklists.py` | 無（上游在 `6cf5681` 新增） |
+| `src/silent_vlog_maker/routing.py` | 無（同上） |
+
+其餘命中在 `LICENSE`／`README`／`examples/README.md` 等**作者署名**處——那是應該留著的，
+不是外洩。所以「私人識別字串」已經不再是擋住整批引用的理由，真正擋住的是下面那條。
+
+### 不引用：Editkin v4 轉向（`6cf5681`、`23f87b6`、`59bb9f7` 及其後續）
+
+`6cf5681` **整個刪掉 `src/capcut_helpers/`**（−3549 行，19 個檔案，本 fork 有 2 份測試覆蓋），
+把唯一的剪輯執行路徑換成 Editkin v4。上游 `SETUP.md` 自己寫：「這個 kit 只有一條現行剪輯執行
+路徑：**Editkin v4 structured workflow**」「使用 Editkin 支援的 **client/server 環境**」。
+
+也就是說引用它等於：刪掉本 fork 現在能跑的 CapCut 工具鏈，換成一個**需要外部 client/server
+環境**、而本 fork 沒有也不打包的執行期。這不是「產品方向不同」這種空話——是本線引用之後會失去
+可執行能力、且換不到可執行的替代品。
+
+**觸發條件**：本 fork 決定引進 Editkin 環境，或上游恢復第二套 editor runtime。
+
+### 不引用：發佈中樞與 release 打包（`62f44e6`／`0f9c367`／`9252d89`／`1c660a8` 等）
+
+這些改的是上游的發佈側：`publish_hub.py`、`autonomy_standard`、`remix_planner`、
+`release_manager.py`。**本 fork 一個都沒有**（`git ls-files | grep -E "publish_hub|autonomy_standard|remix_planner"` 0 命中）。
+例如 `0f9c367`「prevent withdrawn renders from resurfacing」全在 `src/publish_hub.py`。
+
+與本 fork 重疊的部分只有 `.github/workflows/ci.yml`、`README*`、`SETUP*`、`CHANGELOG.md`
+——**這四類本 fork 都有自己的版本**（Windows/Ubuntu CI、fork 文件），上游的改動不適用。
+
+### 不引用：`4f46728` 的 `platform_compat.py`
+
+看起來像跨平台修正，實際只動 `_mac_font_candidates()`：調整 macOS 的 PingFang／Hiragino／
+STHeiti 探測順序。本 fork 是 **Windows-first**，這段在 Windows 路徑上不會執行。
+
+### 不引用：`cf60b58`／`23f87b6` 的 `system_health.py`
+
+兩筆都只是往 `REQUIRED` 檔案清單追加項目，追加的全是上游才有的模組
+（`workflow_contract.py`、`publish_hub.py`、`tools/code-cleanup-helper/`、
+`battle_plan_components.py`）。引用會讓本 fork 的健康檢查去要求一批這裡不存在的檔案，
+把一個好用的檢查變成永遠紅燈。
+
+### 仍待審：`1ec32f4`（13 個 fork 檔）與 `b74b3be`（43 個 fork 檔）
+
+v0.23.0 的兩個 release commit 動到本 fork 也有的產品檔（`shorts_gate.py`、`shorts_autopilot.py`、
+`silent_vlog_maker/` 多個模組、`longform_maker/word_captions.py`）。**這兩筆的 diff 還沒逐行讀**，
+所以 **commit 水位不推進**——推進等於宣稱審過，而事實不是。
+
+PR 水位 13 → 14（`#14` 是 v0.23.0 的 release PR，內容即上述 commit，結論同上）；
+issue 水位維持 0（實查上游 issue 數為 0）。
+
+**下一步**：只讀 `1ec32f4` 與 `b74b3be` 對那 13／43 個檔的 diff，判斷哪些是與 Editkin 無關的
+獨立修正（那些可以引用），哪些是轉向的一部分（跟著上面的結論走）。做完才推進 commit 水位。
