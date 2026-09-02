@@ -32,7 +32,7 @@ def _probe_dur(f):
 
 # ── M38: 去 emoji（NotoSansTC 無 emoji glyph → libass render 成豆腐框）──
 EMOJI_RE = re.compile(
-    "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF"
+    "[\U0001F000-\U0001FAFF\U00002600-\U000027BF"
     "←-⇿⬀-⯿️⃣]")
 def strip_emoji(s):
     return EMOJI_RE.sub("", s)
