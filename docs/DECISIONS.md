@@ -1,5 +1,13 @@
 # 維護決策
 
+## 2026-08-31：v0.23.0 release bundle 不採用；watermark 維持
+
+**決定**：不合併 `1ec32f4` 或 `b74b3be`，`reviewed_through` 維持 `6dc9ad8`。
+
+**理由**：兩個 release commit 合計跨 178 個檔案，且仍把 release identity 指向 `Hao0321`，
+並含私人品牌內容；直接採用會違反公開 fork 與本 fork Path 1/CapCut 契約。這是有界審查，
+不是把其後 10 個 updater/release commits 視為已審。
+
 ## 2026-08-23：實查 v0.21.2（PR #13），維持不引用
 
 **決定**：`reviewed_date` 推進到 2026-08-23，`reviewed_through` 不動。上游 `release/v0.21.2`

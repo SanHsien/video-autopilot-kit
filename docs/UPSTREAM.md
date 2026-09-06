@@ -33,6 +33,20 @@ python tools\check_upstream_updates.py --strict
 
 Baseline 代表「已審查」，不代表「全部已合併」。
 
+## 2026-08-31：bounded review 至 v0.23.0 的兩個 release commit
+
+本輪實讀先前列為未逐檔判讀的 `1ec32f4` 與 `b74b3be`。前者改 52 檔、+3,688/-2,183 行，
+後者改 126 檔、+10,021/-7,519 行；兩者都重寫 release／sync、publish hub、Shorts gate 與
+大量技能／知識內容，不是可獨立 cherry-pick 的修正。
+
+`1ec32f4` 的 `src/` 仍含 `Hao0321` 身分、release URL 與私人品牌內容；`b74b3be` 仍把
+release manager 指到 `Hao0321/video-autopilot-kit`。這直接命中既有 U21-01 的公開 fork 身分與
+release-channel 阻擋，因此**不採用**，也不推進 `reviewed_through`。
+
+下一個可執行切片是 `eeea298..74041fc` 的 10 個跨平台 updater／release 修正：僅在逐檔證明
+不碰上游 release identity、私人內容、或本 fork CapCut/Path 1 輸出契約後，才可另行採用；驗收為
+focused pytest 加 `python src/system_health.py --quick`。本輪未跑影音 full health，因為沒有修改本 fork 程式。
+
 ## 2026-08-12：上游 v0.13.0 commits、issues、PR review
 
 本輪審查上游 `main` 從 `de4cef7` 到 `0aeaf48` 的三個 commits，並檢查全部 issues／PR：
