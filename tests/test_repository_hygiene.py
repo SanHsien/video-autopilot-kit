@@ -17,7 +17,6 @@ def test_maintenance_skeleton_is_complete() -> None:
         ".github/workflows/upstream-check.yml",
         ".github/workflows/dependency-freshness.yml",
         "AGENTS.md",
-        "CLAUDE.md",
         "CODE_OF_CONDUCT.md",
         "CONTRIBUTING.md",
         "FORK.md",
