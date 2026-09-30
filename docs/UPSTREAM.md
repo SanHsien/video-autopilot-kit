@@ -33,6 +33,14 @@ python tools\check_upstream_updates.py --strict
 
 Baseline 代表「已審查」，不代表「全部已合併」。
 
+## 2026-09-30：審至 `b449e7a`
+
+- commit：`6dc9ad8..b449e7a` 共 29 筆，全部不引用；分類與證據見 [`DECISIONS.md`](DECISIONS.md) 同日條目。
+- PR：`#17..#23`（皆屬上游 Editkin／發佈／協作流程），未收。
+- issue：`#15`、`#16` 為 gate 相關回報，本 fork 實測皆不受影響。
+
+水位已寫入 `tools/upstream_baseline.json`：commit `b449e7a`、PR #23、issue #16。
+
 ## 2026-08-31：bounded review 至 v0.23.0 的兩個 release commit
 
 本輪實讀先前列為未逐檔判讀的 `1ec32f4` 與 `b74b3be`。前者改 52 檔、+3,688/-2,183 行，

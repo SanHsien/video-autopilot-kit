@@ -1,5 +1,22 @@
 # 維護決策
 
+## 2026-09-30：上游 29 個 commit、PR #17–#23、issue #15–#16 審查（無引用）
+
+**決定**：全部不引用；`reviewed_through` 推進至 `b449e7a`。兩邊歷史無共同祖先，只能 `cherry-pick`；沒有任何一筆是可獨立引用且本機可驗的修正。
+
+| 範圍 | 結論 | 證據與理由 |
+| --- | --- | --- |
+| `62f44e6`、`0f9c367`、`9252d89`、`1c660a8`、`1ec32f4`、`b74b3be` | 不引用 | 沿用 2026-08-30／08-31 結論：release／publish hub／Editkin 轉向，且 `src/` 仍含上游作者身分 |
+| `23f87b6`、`6cf5681`、`59bb9f7`、`1fac054`、`cf60b58` | 不引用 | Editkin v4、imagegen filter runtime、battle plan、system_health 清單；本 fork 沒有對應模組（同 2026-08-30） |
+| `eeea298`..`74041fc`（10 筆 updater／release 修正） | 不引用 | 前次列為下一切片：實查改動檔 `sync_canonical.py`、`release_integrity.py`、`release_manager_selftest.py`、`install_or_upgrade.py`、`sync-receipt.json` 本 fork 一個都沒有（0 命中）；共有的只有 `.github/workflows/ci.yml`、`examples/README.md`、`src/platform_compat.py`（macOS 字型順序，Windows 不執行） |
+| `eebd50e`（#17）、`b4f672d`、`21e5e6a`（#19）、`411d985`（#20）、`9bb83f5`（#21）、#22 | 不引用 | 上游 Editkin 技能／design_runtime／MV 動態與 shot selection 文件與模組；87／4／13／9／2 檔中與本 fork 共有的檔案合計僅 1 個（`.gitignore`）或 0 個 |
+| `52b3ee1`（#18） | 不引用 | 唯一共有檔 `src/longform_maker/script_gate.py`（+19/-7）放寬 chapter 問句規則並改名 `structure.chapter_no_question` → `chapter_no_progress`，會改動本 fork 2026-08-09 的 Shorts／script gate 校準契約；其餘 7 檔是上游 `scripts/public_*`、SKILL 文件 |
+| `b449e7a`（#23）、`a1434c5` | 不引用 | 協作／CODEOWNERS／issue 模板指向 `Hao0321` 的 security advisory；本 fork 自有 `.github/` 與 CI |
+| issue #15 | 不適用 | 上游 v0.23.0 移除 `DEFAULT_RULES` 導致 `examples/04_shorts_gate.py` 壞掉；本 fork `shorts_gate.py:118` 仍有 `DEFAULT_RULES`，範例可用 |
+| issue #16 | 不適用 | `gate_shorts` 缺 `segs` 拋 `KeyError`；本 fork 實測回傳 `(False, {'ok': False, 'fails': ['SPEC segs ...']})`，缺陷不存在 |
+
+**觸發條件**：本 fork 決定引進 Editkin 環境，或上游清除 `src/` 中的私人身分且拆出可獨立的 gate 修正時重評。
+
 ## 2026-08-31：v0.23.0 release bundle 不採用；watermark 維持
 
 **決定**：不合併 `1ec32f4` 或 `b74b3be`，`reviewed_through` 維持 `6dc9ad8`。
