@@ -6,8 +6,9 @@
   NaN) are skipped one by one, so a single bad row no longer crashes the gate or hides the S-Q warning.
   The defect class was reported upstream (draft PR #25); this is the fork's own minimal fix, verified
   against reproductions on this tree. The embedded self-test no longer feeds `in_sec=-1.5`.
-- The shipped `examples/PLAN_TEMPLATE.md` passed `plan_gate` unedited. P3 now counts only pairs that are
-  not template placeholders (`標題候選一` / `縮圖概念一`), and P4 / P5 fail when the compliance line or the
+- The shipped `examples/PLAN_TEMPLATE.md` passed `plan_gate` unedited. P3 no longer counts pairs with a cell
+  that is wholly a template placeholder (`標題候選一` / `縮圖概念一` / `TODO`) and says how many it skipped;
+  real titles that merely contain such words still count. P4 / P5 fail when the compliance line or the
   cluster keyword still holds `YYYY-MM-DD`, `TODO` or `你的主題詞`. The template itself now fails until filled in.
 - `gate_core` fails closed: `make_assert` raises when a gate returns `ok=False` with no reasons,
   `raise_if_failed` raises for a non-dict report or a missing `fails` list, and `selftest_runner` reports
@@ -17,9 +18,11 @@
   the option). Size is now `WxH`, the zoom is centre-anchored and spread over every frame, and the pan canvas
   follows the target aspect instead of a fixed 2400:1350 that squeezed portrait output.
 - `fx_lib.double_bloom` blurred straight-alpha RGBA, so transparent black bled into the glow and darkened the
-  background around the element. It now blurs only the alpha mask and fills it with the element's light-weighted colour.
+  background around the element. It now blurs only the alpha mask and fills it with the element's light-weighted
+  average colour, so a multi-colour element gets one glow colour instead of per-pixel colours.
 - `shorts_vertical` encodes tag BT.709 primaries / transfer / matrix (the finished Short was all `unknown`), the
-  `threads` encode preset gains its missing `-colorspace bt709`, and adjacent Latin caption blocks keep a word gap.
+  `threads` encode preset gains its missing `-colorspace bt709`, and adjacent Latin caption blocks keep a word gap
+  (a word deliberately split across colours, e.g. `("Ham","y"),("burger","w")`, now renders as two words).
 - `quality_check.verify_output` no longer reports a clean result for an mp4 with no audio track or a failed
   stream probe; pass `expected_audio=False` when silence is intended.
 - `shorts_gate.merge_rules` rejects NaN / infinite / string / bool / negative values, an inverted or malformed
@@ -28,11 +31,10 @@
   ban every single character), and treats a single-string `need_pair` value as one partner.
 - `text_overlay` `signature_bottom` moves up 30 px so its box stays inside the 1660 px bottom safe line.
 - `examples/04` docs: the broken spec has two blocking failures and one S-A warning, not three blockers.
-- These come from the defect list in upstream draft PR #26; each was reproduced on this tree first and fixed
-  with the fork's own minimal change. Not adopted, with reasons, in `docs/DECISIONS.md`.
-- These three come from the defect list in upstream draft PR #26 (Package D, `aa53359`); the fork's
-  versions are its own minimal fixes. Upstream's signed-reviewer P4 stamp and typed-source rule are not
-  adopted (they change the gate contract); see `docs/DECISIONS.md`.
+- The `gate_core` / `plan_gate` / `interview_gate` items and the media fixes above come from the defect list in
+  upstream draft PR #26; each was reproduced on this tree first and fixed with the fork's own minimal change.
+  Upstream's signed-reviewer P4 stamp, typed-source rule and the rest not adopted, with reasons, in
+  `docs/DECISIONS.md`.
 - Upstream reviewed through `a50c73b` (v0.25.0), PR #29 and issue #30; see `docs/DECISIONS.md`.
 - `ruff` 0.17, `pre-commit` 4.7 and `Pillow` 13.0 recorded in `.github/dependency-deferrals.json`: CI
   already resolves each from the existing range and stays green (Pillow 13.0.0 included in the Windows

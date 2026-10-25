@@ -66,6 +66,20 @@ def test_placeholder_plan_fields_are_blocked(changes: dict, rule: str) -> None:
     assert any(failure.startswith(rule) for failure in report["fails"])
 
 
+def test_real_titles_that_mention_placeholder_words_still_count() -> None:
+    real_titles = "%d. AI 概念一次講清楚%d | 大字 TODO 清單%d"
+    ok, report = plan_gate.gate_plan(_signed_plan(pair=real_titles))
+
+    assert ok, report["fails"]
+    assert report["pairs"] == 8
+
+
+def test_placeholder_pairs_are_named_in_the_p3_message() -> None:
+    _ok, report = plan_gate.gate_plan(_signed_plan(pair="%d. 標題候選%d | 縮圖概念%d"))
+
+    assert any("模板佔位" in failure for failure in report["fails"] if failure.startswith("P3"))
+
+
 def test_plan_gate_selftest_passes() -> None:
     with contextlib.redirect_stdout(io.StringIO()):
         assert plan_gate._selftest() == 0

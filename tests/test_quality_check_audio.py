@@ -54,4 +54,3 @@ def test_audio_track_is_measured(tmp_path: Path) -> None:
 
     assert "audio_lra_lu" in result
     assert not any("no audio track" in issue for issue in result["issues"])
-

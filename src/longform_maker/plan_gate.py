@@ -33,8 +33,16 @@ _CLUSTER_RE = re.compile(r"cluster\s*關鍵字[:：]\s*\S+", re.IGNORECASE)
 _EXPECTED_RE = re.compile(r"Expected\s*Views|期望值對標", re.IGNORECASE)
 # 模板佔位字：沒換掉就等於沒填（PLAN_TEMPLATE.md 原樣不得過關）
 _PLACEHOLDER_RE = re.compile(
-    r"(?<![A-Za-z])(?:TODO|TBD|FIXME|YYYY|MM-DD)(?![A-Za-z])|你的主題詞"
-    r"|(?:候選|概念)[一二三四五六七八九十0-9０-９]", re.IGNORECASE)
+    r"(?<![A-Za-z])(?:TODO|TBD|FIXME|YYYY|MM-DD)(?![A-Za-z])|你的主題詞", re.IGNORECASE)
+# 包裝候選只認「整格」佔位（標題候選一 / 縮圖概念一 / TODO），真標題裡出現「概念一次」不算
+_PAIR_CELL_PLACEHOLDER_RE = re.compile(
+    r"(?:標題|縮圖)?(?:候選|概念)[一二三四五六七八九十0-9０-９]+|TODO|TBD|待補|\.{3}|…",
+    re.IGNORECASE)
+
+
+def _is_placeholder_pair(line: str) -> bool:
+    body = re.sub(r"^\s*(?:\d+[.)、]|[-*])\s*", "", line)
+    return any(_PAIR_CELL_PLACEHOLDER_RE.fullmatch(cell.strip()) for cell in body.split("|"))
 
 
 def _line_at(text: str, match) -> str:
@@ -54,14 +62,17 @@ def gate_plan(text: str):
         fails.append("P2 缺機器歸屬（機器：推薦/搜尋）")
 
     pkg = _PKG_HEAD_RE.search(text)
-    n_pairs = 0
+    n_pairs = n_template = 0
     if pkg:
         seg = text[pkg.end():]
         nxt = re.search(r"^#+\s", seg, re.MULTILINE)
         seg = seg[: nxt.start()] if nxt else seg
-        n_pairs = len([p for p in _PAIR_RE.findall(seg) if not _PLACEHOLDER_RE.search(p)])
+        pairs = _PAIR_RE.findall(seg)
+        n_pairs = len([p for p in pairs if not _is_placeholder_pair(p)])
+        n_template = len(pairs) - n_pairs
     if n_pairs < 8:
-        fails.append("P3 包裝候選不足（%d/8 組『標題 | 縮圖』；包不出來=砍題）" % n_pairs)
+        fails.append("P3 包裝候選不足（%d/8 組『標題 | 縮圖』；包不出來=砍題）" % n_pairs
+                     + ("；另有 %d 組仍是模板佔位，不算數" % n_template if n_template else ""))
 
     m_comp = _COMPLIANCE_RE.search(text)
     if not m_comp:
