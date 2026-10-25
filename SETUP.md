@@ -12,7 +12,7 @@
 這個 kit 有**兩條 first-class path**，需求不同：
 
 - **零依賴規劃／gate（Win / Mac / Linux）**：Python 3.9+ 即可；不解碼或處理影像。
-- **Path 1 — Programmatic／桌面工作台（推薦採用者預設；Win / Mac / Linux）**：Python 3.11+、`ffmpeg`/`ffprobe`，以及 `requirements-path1.txt`。這條路會解碼本機媒體與影像；Pillow 13 的安全修補不支援舊版 Python。
+- **Path 1 — Programmatic／桌面工作台（推薦採用者預設；Win / Mac / Linux）**：Python 3.12+、`ffmpeg`/`ffprobe`，以及 `requirements-path1.txt`。這條路會解碼本機媒體與影像；Pillow 13 的安全修補不支援舊版 Python。
 
   **安裝 ffmpeg（一次搞定，三平台都有）**：
   | 平台 | 指令 |
@@ -80,7 +80,7 @@ AI 會一題一題問、自動幫你填，你**只要用講的回答**，不用�
 
 ## 4️⃣ 製作設定 / Production → 生成 `config.py`　★必答
 - **你走哪條 path？**（見最上面「平台需求」）
-  - **Path 1 Programmatic**（推薦預設；Win/Mac/Linux）—— 需要 Python 3.11+、`requirements-path1.txt` 與 ffmpeg，**不需要 CapCut**；只跑零依賴規劃／gate 則仍支援 Python 3.9+
+  - **Path 1 Programmatic**（推薦預設；Win/Mac/Linux）—— 需要 Python 3.12+、`requirements-path1.txt` 與 ffmpeg，**不需要 CapCut**；只跑零依賴規劃／gate 則仍支援 Python 3.9+
   - **Path 2 CapCut-assisted**（Windows-first）—— 要用 CapCut 的花字 / 雲端模板才選這條
 - 走 Path 2 的話：**CapCut Desktop 國際版**裝了嗎？⚠️ **AI 助手有開 Computer Use 嗎？** CapCut 沒有公開 API，GUI 自動化是靠 **AI 透過 Computer Use 實際操作 CapCut 視窗**（套模板 / 匯出）——沒開就跑不了。草稿 JSON 直改**版本敏感**，先跑 `detect_draft_format()` + 讀 [TROUBLESHOOTING](TROUBLESHOOTING.md)
 - 你的**字體檔**放哪？**BGM** 放哪？**b-roll 庫存**放哪？專案 / 匯出路徑？

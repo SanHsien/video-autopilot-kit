@@ -3,7 +3,7 @@
 `path1_gui.py` 是 SanHsien fork 的 Windows-first 桌面工作台。它是既有 Programmatic pipeline
 的薄層介面，不另做一套剪輯引擎，也不需要 CapCut、登入或外部雲端服務。
 
-Path 1 會解碼使用者選擇的本機媒體與影像，因此來源模式與 EXE 建置都要求 Python 3.11+
+Path 1 會解碼使用者選擇的本機媒體與影像，因此來源模式與 EXE 建置都要求 Python 3.12+
 及 `requirements-path1.txt`（Pillow 13 或更新）。Python 3.9+ 仍支援不處理影像的核心
 規劃與 gate；它不是 Path 1 media runtime 的相容承諾。
 

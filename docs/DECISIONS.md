@@ -5,8 +5,8 @@
 - **採用**：`requirements-path1.txt` 的 Pillow 下限由 12.3 升到 13。GitHub advisory 查到 Pillow
   `<= 12.3.0` 有多筆 critical／high（例 GHSA-5x8w-8jj5-q52h：crafted FPX 影像堆積溢位，修補版 13.0.0），
   而 Path 1 會開啟使用者選的本機影像。這是程式面的安全理由，不是為消新鮮度紅燈：新鮮度本來就綠
-  （`.github/dependency-deferrals.json` 的 Pillow 條目因此移除，下限已等於最新 minor）。Pillow 13 需 Python 3.11+，
-  同檔 `numpy>=2.5` 本來就要 3.11+；零依賴 gate 與 CI 的 Python 3.9 leg（另裝 `Pillow>=10`）不變。
+  （`.github/dependency-deferrals.json` 的 Pillow 條目因此移除，下限已等於最新 minor）。Path 1 因此需 Python 3.12+，
+  同檔 `numpy>=2.5` 本來就要 3.12+（Pillow 13 單獨只要 3.11+）；零依賴 gate 與 CI 的 Python 3.9 leg（另裝 `numpy>=1.26`／`Pillow>=10`，僅作測試用、不屬支援承諾）不變；`requirements-optional.txt` 的 Pillow 下限一併升到 13。
 - **掃描（PLAYBOOK 判準八）**：取 `Hao0321/video-autopilot-kit` PR #22／#24／#25／#26 目前 head
   （`ba0db4d`、`adabe83`、`8da386f`、`f8a06cc`）與 `b449e7a..a50c73b` 全範圍 diff，找行內長空白後接內容、`eval(`、
   `new Function(`、`globalThis`／`global.require`、200 字以上 base64、120 字以上 hex、超過 600 字元的單行：

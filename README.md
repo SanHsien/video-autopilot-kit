@@ -46,7 +46,7 @@ python examples/06_teardown.py
 - `05`：訪談 gate，沒來源的來賓數據在錄影前被擋下。
 - `06`：競品節奏拆解與可比較指標。
 
-Python 需求為 **3.9+**。部分純 Python gate 不需要 ffmpeg；影音合成流程則需要 `ffmpeg` / `ffprobe`。完整範例見 [`examples/README.md`](examples/README.md)。
+Python 需求為 **3.9+**（Path 1 桌面工作台／EXE 的影像執行環境需 3.12+，見 [`SETUP.md`](SETUP.md)）。部分純 Python gate 不需要 ffmpeg；影音合成流程則需要 `ffmpeg` / `ffprobe`。完整範例見 [`examples/README.md`](examples/README.md)。
 
 ## Windows Path 1 GUI
 

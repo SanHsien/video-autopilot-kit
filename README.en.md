@@ -46,7 +46,7 @@ python examples/06_teardown.py
 - `05`: interview gate that blocks unsourced guest claims before recording.
 - `06`: competitor-rhythm teardown and comparable metrics.
 
-Python **3.9+** is required. Some pure-Python gates need no ffmpeg; media-generation workflows require `ffmpeg` / `ffprobe`. See [`examples/README.md`](examples/README.md) for the full set.
+Python **3.9+** is required (the Path 1 desktop workbench / EXE image runtime needs 3.12+; see [`SETUP.en.md`](SETUP.en.md)). Some pure-Python gates need no ffmpeg; media-generation workflows require `ffmpeg` / `ffprobe`. See [`examples/README.md`](examples/README.md) for the full set.
 
 ## Windows Path 1 GUI
 
