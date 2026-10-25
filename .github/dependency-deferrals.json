@@ -1,9 +1,5 @@
 {
   "deferrals": {
-    "Pillow": {
-      "deferredLatest": "13.0",
-      "reason": "2026-10-25 reviewed: the unbounded Pillow>=12.3 range already resolves 13.0.0 in CI, and the windows-latest job builds the Path 1 EXE and passes the packaged --smoke-test with it (run 40168249189); no code needs a 13-only API, so the 12.3 floor stays. Recorded at minor depth because Pillow changes need a real EXE smoke; 13.1 re-opens the review."
-    },
     "pre-commit": {
       "deferredLatest": "4.7",
       "reason": "2026-10-25 reviewed: the >=4.6,<5 range already resolves 4.7.0 in CI and `pre-commit run --all-files` stays green; dev-only tool, nothing needs a 4.7-only feature, so the 4.6 floor stays. 4.8 re-opens the review."

@@ -1,5 +1,19 @@
 # 維護決策
 
+## 2026-10-26：Path 1 要求 `Pillow>=13`（安全修補）；上游 PR 現行 head 隱藏內容掃描
+
+- **採用**：`requirements-path1.txt` 的 Pillow 下限由 12.3 升到 13。GitHub advisory 查到 Pillow
+  `<= 12.3.0` 有多筆 critical／high（例 GHSA-5x8w-8jj5-q52h：crafted FPX 影像堆積溢位，修補版 13.0.0），
+  而 Path 1 會開啟使用者選的本機影像。這是程式面的安全理由，不是為消新鮮度紅燈：新鮮度本來就綠
+  （`.github/dependency-deferrals.json` 的 Pillow 條目因此移除，下限已等於最新 minor）。Pillow 13 需 Python 3.11+，
+  同檔 `numpy>=2.5` 本來就要 3.11+；零依賴 gate 與 CI 的 Python 3.9 leg（另裝 `Pillow>=10`）不變。
+- **掃描（PLAYBOOK 判準八）**：取 `Hao0321/video-autopilot-kit` PR #22／#24／#25／#26 目前 head
+  （`ba0db4d`、`adabe83`、`8da386f`、`f8a06cc`）與 `b449e7a..a50c73b` 全範圍 diff，找行內長空白後接內容、`eval(`、
+  `new Function(`、`globalThis`／`global.require`、200 字以上 base64、120 字以上 hex、超過 600 字元的單行：
+  只有縮排對齊的續行、`ast.literal_eval`（PR #25，安全）與文件長行，無隱藏內容，不需拒收。
+- **清理**：遠端分支 `claude/charming-sagan-ex1wvl`（`c7b1879`）與 `ci/job-names-20261024`（`8b3a511`）內容已在 `main`
+  （後者為已合併的 PR #3），無 open PR，已刪。
+
 ## 2026-10-25：維護者決定採用上游三項改動（issue #4）
 
 **決定**：維護者 2026-10-25 決定採用 issue #4 列出的三項（上一則審查原列為「需要維護者決定」），照上游做法移植、

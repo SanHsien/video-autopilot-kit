@@ -12,7 +12,8 @@
 
 The kit has **two first-class paths** with different requirements:
 
-- **Path 1 — Programmatic (recommended default for adopters; Win / Mac / Linux)**: just Python 3.9+ and `ffmpeg`/`ffprobe`.
+- **Zero-dependency planning/gates (Win / Mac / Linux)**: Python 3.9+ is sufficient; they do not decode or process images.
+- **Path 1 — Programmatic / desktop workbench (recommended default for adopters; Win / Mac / Linux)**: Python 3.11+, `ffmpeg`/`ffprobe`, and `requirements-path1.txt`. This path decodes local media and images; Pillow 13 security fixes do not support older Python releases.
 
   **Installing ffmpeg (one-time, all platforms):**
   | Platform | Command |
@@ -78,7 +79,7 @@ The AI asks one question at a time and fills the files for you — **you just an
 
 ## 4️⃣ Production → generates `config.py`　★required
 - **Which path are you on?** (see "Platform requirements" up top)
-  - **Path 1 Programmatic** (recommended default; Win/Mac/Linux) — pure-code pipeline, just Python + ffmpeg, **no CapCut**
+  - **Path 1 Programmatic** (recommended default; Win/Mac/Linux) — requires Python 3.11+, `requirements-path1.txt`, and ffmpeg, **no CapCut**; zero-dependency planning/gates remain supported on Python 3.9+
   - **Path 2 CapCut-assisted** (Windows-first) — pick this only if you want CapCut's fancy-text / cloud templates
 - If Path 2: is **CapCut Desktop (international edition)** installed? ⚠️ **Does your AI assistant have Computer Use enabled?** CapCut has no public API — GUI automation works by the **AI operating the CapCut window via Computer Use** (apply templates / export); without it, it won't run. Draft-JSON editing is **version-sensitive** — run `detect_draft_format()` first and read [TROUBLESHOOTING](TROUBLESHOOTING.md)
 - Where are your **fonts** / **BGM** / **b-roll** stored? Project / export paths?

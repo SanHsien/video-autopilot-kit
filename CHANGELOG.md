@@ -14,6 +14,12 @@
     captions are no longer over-counted by S-R; the 5 / 7 chars-per-second thresholds are unchanged and pure
     Chinese captions behave as before.
 
+- **Security:** Path 1 requires `Pillow>=13` (was `>=12.3`). Pillow <= 12.3.0 is affected by critical/high
+  image-decoding advisories (e.g. GHSA-5x8w-8jj5-q52h, heap overflow on a crafted FPX image) fixed in 13.0.0,
+  and Path 1 opens user-selected local images. Pillow 13 needs Python 3.11+, which `numpy>=2.5` in the same
+  file already required; the zero-dependency gates and the Python 3.9 CI leg are unchanged. `SETUP*.md`,
+  `docs/DEVELOPMENT.md` and `docs/PATH1_GUI.md` now say which parts need Python 3.11+.
+
 - `gate_shorts` now returns a `SPEC ...` BLOCK instead of raising for a non-dict spec, non-string
   `place` / `what` / `addr` / `name` / `platform`, and a negative segment `in_sec`. `assert_shorts(None)`
   raises the normal `Shorts gate FAIL` assertion. Malformed `_scan.json` clips and rows (non-dict, non-numeric,

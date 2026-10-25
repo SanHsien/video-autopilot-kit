@@ -42,6 +42,12 @@ Baseline 代表「已審查」，不代表「全部已合併」。
 
 分類與證據見 [`DECISIONS.md`](DECISIONS.md) 同日條目。水位：commit `a50c73b`、PR #29、issue #30。
 
+Pillow 12.3.0 的 high/critical image-input 修補在 Pillow 13；fork 對 Path 1 分層要求 Python
+3.11+（`requirements-path1.txt` 下限 `Pillow>=13`），核心 Python 3.9 支援不變。若官方有已修補且支援舊 Python 的
+Pillow 12.x，或 image processing 再宣告為 Python 3.9 功能，必須重評。2026-10-26 複查：上游 `main` 仍為
+`a50c73b`，PR 水位 29、issue 水位 30 沒有新項目；PR #22／#24／#25／#26 現行 head 已做判準八隱藏內容掃描，結果見
+`DECISIONS.md` 2026-10-26。
+
 ## 2026-09-30：審至 `b449e7a`
 
 - commit：`6dc9ad8..b449e7a` 共 29 筆，全部不引用；分類與證據見 [`DECISIONS.md`](DECISIONS.md) 同日條目。

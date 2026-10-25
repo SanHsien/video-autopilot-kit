@@ -6,6 +6,10 @@ SanHsien fork 的主要開發、除錯與完整驗收環境是 Windows 11 + Powe
 
 ## Windows PowerShell
 
+零依賴的規劃／gate 可在 Python 3.9+ 執行。需要解碼本機媒體或影像的 Path 1／桌面 EXE
+則要求 Python 3.11+：`requirements-path1.txt` 的 Pillow 13 修補了適用於影像輸入的
+high/critical 問題，且 Pillow 13 不再支援舊版 Python。
+
 ```powershell
 python -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
