@@ -7,9 +7,11 @@
 
 | 項目 | 上游 | 本 fork 做法 | 影響範圍 |
 | --- | --- | --- | --- |
-| `TONEMAP_FILTER` `npl` 250 → 100 | PR #26 `c9e7936` | 只改 `silent_vlog_maker/constants.py` 的 `zscale=t=linear:npl=` 數值與註解；本 fork 沒有 `visual_master`，不併 `HDR_TO_SDR_FILTER` | 所有走 `TONEMAP_FILTER` 的 HDR（HLG／HDR10）→ SDR 輸出（`effects`、`pipeline`）：同一 HLG 輸入灰階 Y 約 63 → 91，成品**變亮**（不再整體壓暗 2.5 倍）。SDR 素材不經此濾鏡，不受影響 |
+| `TONEMAP_FILTER` `npl` 250 → 100 | PR #26 `c9e7936` | 只改 `silent_vlog_maker/constants.py` 的 `zscale=t=linear:npl=` 數值與註解；本 fork 沒有 `visual_master`，不併 `HDR_TO_SDR_FILTER` | 所有走 `TONEMAP_FILTER` 的 HDR（HLG／HDR10）→ SDR 輸出（`effects`、`pipeline`）：成品**變亮**（不再整體壓暗 2.5 倍；幅度依輸入而定，審查實測 HLG 灰 0x808080 的 YAVG 92 → 123）。SDR 素材不經此濾鏡，不受影響 |
 | `plan_gate` P4 + `interview_gate` 來源 | Package D `aa53359`、`f8faa80` | P4 只認**行首**「合規：通過 YYYY-MM-DD 複核：姓名」：日期要真實且不在未來、要有真人複核人（`AI`／`codex` 等機器名不算）、含否定／待辦／佔位字不算、多個互相矛盾的章不算。`interview_gate` 成就來源只收 `url:`（http/https）、`file:`（檔案須存在，相對路徑以 `base_dir` 為準）、`sha256:`（64 位 hex）；每個字串欄位都掃佔位字（I-E）。`gate_core` 新增共用 `is_placeholder()`。`interview_autopilot plan` 加 `--reviewer`（預設 `profiles/show.md` 的 `HOST_NAME`），簽章帶當天日期與複核人，`_guest.py` stub 改教型別化來源。`examples/PLAN_TEMPLATE.md` 改為「合規：待複核」、`examples/05_interview_plan.py` 改用 `url:` 來源 | **gate 契約變嚴**：舊格式「合規：通過（政策 checklist 2026-01-01）」與自由文字來源（「來賓提供後台截圖」）現在一律 FAIL，既有規劃檔與 `_guest.py` 需改成新格式。影響 `plan_gate`、`interview_gate`、`interview_autopilot`、`gate_core`、`examples/05`、`SETUP*.md`、`knowledge/interview-show-playbook.md` |
 | `_nchars` 半形 0.5 字 | PR #26 `shorts_gate.py` | 全形（東亞寬度 W／F）計 1、半形英數與符號計 0.5、空白不計；S-R 門檻 `SR_WARN=5`／`SR_FAIL=7` 字/秒**數值不變**（單位仍是「字」，上游同樣不調數值） | `shorts_gate` S-R 讀速：純中文字幕結果不變；英文與中英混排字幕等於放寬一倍（14 個英文字母停 1.2 秒，舊算法 11.7 字/秒 FAIL，現為 5.8 字/秒 WARN）。S-R 訊息字數改顯示一位小數 |
+
+**已知限制（沿用上游，未加強）**：P4 複核人只擋精確的機器名單（`AI`、`codex` 等），屬君子協定；`file:` 只驗檔案存在、`sha256:` 只驗格式，I-B 不驗內容。要加強（前綴比對、剔除 HTML 註解、拒絕 `_guest.py` 自身）需另行決定。
 
 **例外沿用上游的取捨**：P3 不採上游的「重複配對／標題=縮圖」剔除與 `is_placeholder` 整串判斷，沿用本 fork `c7b1879` 的整格佔位判斷（真標題含「概念一次」不誤判）；P5 同。
 

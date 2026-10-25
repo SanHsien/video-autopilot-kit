@@ -276,7 +276,7 @@ def _packaging_block(ep, one, start, top, demo, cluster, compliance_ok=False,
     標題一律走**來賓成就框架**（不用「專訪 XXX」，人名對陌生人是零資訊）。
 
     ⚠️ `compliance_ok`：**合規章只能由人蓋**。預設 False → 寫「合規：待複核」→ plan_gate P4
-    直接擋下，訊息告訴你去跑 AI 內容政策 checklist，複核完再 `plan <ep> --compliance-ok`
+    直接擋下，訊息告訴你去跑 AI 內容政策 checklist，複核完再 `plan <ep> --compliance-ok --reviewer 姓名`
     重跑。若程式自動寫「合規：通過」＝**機器自己滿足自己的合規閘門＝假綠**，那道 gate 就
     等於不存在。訪談片牽涉他人的肖像與聲音，這一章尤其不能自動蓋。
     簽章會寫上今天日期與 `reviewer`（複核人）；沒填複核人 → 留佔位字 → P4 照樣擋。

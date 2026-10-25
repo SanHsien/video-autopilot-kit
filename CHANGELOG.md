@@ -2,7 +2,7 @@
 
 - **Adopted from upstream PR #26 / Package D (maintainer decision 2026-10-25, issue #4).** Three behaviour changes:
   - `TONEMAP_FILTER` uses `zscale=t=linear:npl=100` (was 250). HDR (HLG / HDR10) sources are no longer pushed
-    ~2.5x darker: the same HLG input goes from grey Y 63 to about 91, so finished clips look brighter.
+    ~2.5x darker: finished clips look brighter (the size of the change depends on the input).
   - `plan_gate` P4 accepts only a line-start stamp `合規：通過 YYYY-MM-DD 複核：<name>` with a real, non-future date
     and a human reviewer (no `AI`/`codex` etc.; negations, pending words, placeholders and contradicting stamps
     fail). `interview_gate` I-B accepts only typed sources — `url:http(s)://…`, `file:<existing path>` (relative to
