@@ -1,0 +1,8 @@
+{
+  "deferrals": {
+    "ruff": {
+      "deferredLatest": "0.17",
+      "reason": "2026-10-25 reviewed: CI already resolves ruff 0.17.2 from the unpinned >=0.16,<1 range and `ruff check` on tests/tools/path1/build_exe stays green; no code needs a 0.17-only feature, so the 0.16 floor is still a true compatibility claim. Recorded at minor depth because ruff changes rule behaviour on minor releases; 0.18 re-opens the review."
+    }
+  }
+}

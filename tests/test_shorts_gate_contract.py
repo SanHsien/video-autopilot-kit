@@ -105,6 +105,78 @@ def test_malformed_specs_are_blocked_instead_of_crashing(changes: dict) -> None:
     assert any("SPEC" in failure for failure in report["fails"])
 
 
+@pytest.mark.parametrize("spec", [None, [], "spec", 42])
+def test_non_dict_spec_is_blocked_instead_of_crashing(spec) -> None:
+    ok, report = shorts_gate.gate_shorts(spec)
+
+    assert not ok
+    assert any("SPEC" in failure for failure in report["fails"])
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"place": 123},
+        {"what": ["測試說明"]},
+        {"addr": 5},
+        {"name": None},
+        {"platform": ["ig_reels"]},
+    ],
+)
+def test_wrongly_typed_fields_are_blocked_instead_of_crashing(changes: dict) -> None:
+    spec = make_long_spec()
+    spec.update(changes)
+
+    ok, report = shorts_gate.gate_shorts(spec)
+
+    assert not ok
+    assert any("SPEC" in failure for failure in report["fails"])
+
+
+def test_negative_segment_start_is_blocked() -> None:
+    spec = make_long_spec()
+    clip, _start, duration = spec["segs"][1]
+    spec["segs"][1] = (clip, -1.5, duration)
+
+    ok, report = shorts_gate.gate_shorts(spec)
+
+    assert not ok
+    assert any("SPEC segs[1] in_sec" in failure for failure in report["fails"])
+
+
+@pytest.mark.parametrize(
+    "scan",
+    [
+        [1],
+        {"clips": "rows"},
+        {"clips": ["clip"]},
+        {"clips": [{"name": "clip", "rows": "rows"}]},
+        {"clips": [{"name": "clip", "rows": ["row"]}]},
+        {"clips": [{"name": "clip", "rows": [{"t": "2.0", "bright": "dark"}]}]},
+    ],
+)
+def test_malformed_frame_scan_is_ignored(tmp_path: Path, scan) -> None:
+    import json
+
+    clip = tmp_path / "clip.mp4"
+    clip.write_bytes(b"")
+    (tmp_path / "_scan.json").write_text(json.dumps(scan), encoding="utf-8")
+    spec = make_long_spec()
+    spec["segs"] = [(str(clip), start, duration) for _old, start, duration in spec["segs"]]
+
+    ok, report = shorts_gate.gate_shorts(
+        spec,
+        {"dur_min": 26.0, "dur_max": 60.0, "dur_deadzone": None},
+    )
+
+    assert ok, report["fails"]
+
+
+def test_assert_shorts_names_a_non_dict_spec() -> None:
+    with pytest.raises(AssertionError, match="Shorts gate FAIL"):
+        shorts_gate.assert_shorts(None)
+
+
 def test_assert_shorts_accepts_the_same_override_contract() -> None:
     ready = shorts_gate.assert_shorts(
         make_long_spec(),

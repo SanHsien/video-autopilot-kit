@@ -1,3 +1,14 @@
+## Unreleased — Shorts gate blocks malformed input instead of crashing (2026-10-25)
+
+- `gate_shorts` now returns a `SPEC ...` BLOCK instead of raising for a non-dict spec, non-string
+  `place` / `what` / `addr` / `name` / `platform`, and a negative segment `in_sec`. `assert_shorts(None)`
+  raises the normal `Shorts gate FAIL` assertion. A malformed `_scan.json` is treated as absent, the same
+  as a missing one. The defect class was reported upstream (draft PR #25); this is the fork's own minimal
+  fix, verified against reproductions on this tree. The embedded self-test no longer feeds `in_sec=-1.5`.
+- Upstream reviewed through `a50c73b` (v0.25.0), PR #29 and issue #30; see `docs/DECISIONS.md`.
+- `ruff` 0.17 recorded in `.github/dependency-deferrals.json`: CI already runs it from the existing range
+  and lint stays green, so the 0.16 floor is unchanged; 0.18 re-opens the review.
+
 ## Unreleased — the 3.9 CI leg can install its tools again (2026-08-22)
 
 - The previous entry's floors broke the Ubuntu / Python 3.9 job: `pre-commit` 4.4 and `pytest` 9 both

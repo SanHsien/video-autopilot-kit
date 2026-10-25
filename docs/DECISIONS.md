@@ -1,5 +1,26 @@
 # 維護決策
 
+## 2026-10-25：上游 16 個 commit、PR #24–#29、issue #30 審查（PR #25 以自有實作補上）
+
+**決定**：`reviewed_through` 推進至 `a50c73b`、PR 水位 29、issue 水位 30。只有 PR #25 指出的缺陷在本 fork
+實測存在，以本 fork 自己的最小修正補上（不 cherry-pick，因上游已把 gate 拆成本 fork 沒有的
+`shorts_gate_validation.py`）；其餘不引用。
+
+| 範圍 | 結論 | 證據與理由 |
+| --- | --- | --- |
+| PR #25（draft，`9e4e5a1`、`d2e64b3`、`8da386f`） | **自行實作** | 本 fork 實測：`gate_shorts(None)`／`[]` 拋 `AttributeError`；`place=123`、`what=[...]` 拋 `TypeError`；`platform=[...]` 拋 `unhashable`；壞掉的 `_scan.json`（非 dict row、字串數值）拋 `AttributeError`／`TypeError`；`in_sec < 0` 被放行。全部改成回 `SPEC ...` BLOCK，壞 `_scan.json` 視同不存在；內嵌 self-test 的 `-1.5` 起點同步改為 `0.0`。上游範例改寫（`examples/04`）與 `CAPTION_COLOR_KEYS` 不收：本 fork 範例可用，顏色仍由 `resolve_color` 單一來源檢查 |
+| PR #24（open，`adabe83`） | 不引用 | 33 檔，改動集中在 `publish_hub`／`workflow_*`／`review_policy`／`editkin_voiceover_gate`，本 fork 都沒有 |
+| PR #26（draft，10 筆） | 不引用 | 125 檔的 Editkin skill／visual_master／workflow_state 優化包；上游自述 CI 因私有 canonical receipt 不符而紅 |
+| `14d368e`、`6afc789`（#27） | 不引用 | 把 `shorts_gate`／`script_gate`／`word_captions`／`shorts_vertical` 拆成 `*_commands.py`／`*_validation.py`／`caption_grouping.py` 等模組，是結構重組不是缺陷修正；可獨立的 gate 修正已由 PR #25 那列涵蓋 |
+| `0a173d5`、`1b48784`、`f2ecc46`、`18b59d5`、`179ab30`、`dd6b058` | 不引用 | Cleanup bundle、release metadata、`scripts/public_*`、`sync-receipt.json`；共有檔 0 個 |
+| `278fce0` | 不適用 | macOS `/var → /private/var` 實體暫存根，配合上游 path control；本 fork 的 `system_health.py` 是自有版本、沒有該 path control |
+| `c203862`（#28） | 不適用 | 修 `scripts/public_privacy_gate.py` 的 UTF-8 span；本 fork 沒有此 gate |
+| `cfd92c4`、`870e7d5`、`99aa305`（#29） | 不引用 | v0.25.0 退役 `silent_vlog_maker`、longform render、examples 01/03/06（共刪 23 個本 fork 仍在用的 `src/`／`examples/` 檔），改由 Editkin 桌面 app 渲染；與本 fork Path 1（ffmpeg + 可攜 EXE）方向相反 |
+| issue #30（closed） | 不適用 | Editkin 0.15 Windows GPU 預覽 spawn 失敗；屬上游桌面 app，本 fork 不含 |
+
+**觸發條件**：本 fork 決定改以 Editkin 渲染、或採用上游模組化的 gate 拆分時重評 `14d368e`／`6afc789`／`cfd92c4`；
+上游若再修 gate 輸入驗證，逐條比對本 fork `_validate_spec_shape` 是否仍缺。
+
 ## 2026-09-30：上游 29 個 commit、PR #17–#23、issue #15–#16 審查（無引用）
 
 **決定**：全部不引用；`reviewed_through` 推進至 `b449e7a`。兩邊歷史無共同祖先，只能 `cherry-pick`；沒有任何一筆是可獨立引用且本機可驗的修正。

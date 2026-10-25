@@ -155,6 +155,24 @@ def merge_rules(rules: dict = None, platform: str = None) -> dict:
     return merged
 
 
+def _scan_shape_ok(j) -> bool:
+    """_scan.json 須是 {clips: [{name: str, rows: [{t/bright/sharp: 有限數字}]}]}。"""
+    if not isinstance(j, dict) or not isinstance(j.get("clips", []), list):
+        return False
+    for c in j.get("clips", []):
+        if (not isinstance(c, dict) or not isinstance(c.get("name", "?"), str)
+                or not isinstance(c.get("rows", []), list)):
+            return False
+        for r in c.get("rows", []):
+            if not isinstance(r, dict):
+                return False
+            for key in ("t", "bright", "sharp"):
+                v = r.get(key, 0.0)
+                if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+                    return False
+    return True
+
+
 def _first_frame_quality(spec: dict):
     """回 {chosen, best, top} 或 None（無 _scan.json 時靜默跳過=向後相容）。"""
     clip0, in0, _d = spec["segs"][0]
@@ -165,6 +183,8 @@ def _first_frame_quality(spec: dict):
         with open(scan_p, encoding="utf-8") as f:
             j = json.load(f)
     except Exception:
+        return None
+    if not _scan_shape_ok(j):                  # 壞掉的 _scan.json 等同沒有，不讓 gate 崩潰
         return None
     stem0 = os.path.splitext(os.path.basename(str(clip0)))[0]
     pool, chosen = [], None
@@ -257,6 +277,8 @@ def _validate_spec_shape(spec: dict) -> list[str]:
                 failures.append(f"SPEC segs[{index}] {label} 必須是有限數字")
             elif label == "dur" and number <= 0:
                 failures.append(f"SPEC segs[{index}] dur 必須 > 0")
+            elif label == "in_sec" and number < 0:
+                failures.append(f"SPEC segs[{index}] in_sec 必須 >= 0")
 
     captions = spec.get("caps_by_seg")
     if not isinstance(captions, (list, tuple)):
@@ -299,12 +321,19 @@ def _validate_spec_shape(spec: dict) -> list[str]:
 def gate_shorts(spec: dict, rules: dict = None):
     """回傳 (ok, report)。report["fails"] 非空 = 不准出片。"""
     fails, warns = [], []
+    if not isinstance(spec, dict):
+        return False, _report(["SPEC spec 必須是 dict"], warns)
     name = spec.get("name", "?")
 
     # ── 必填欄位（S-A / S-E）
     for k in ("place", "what", "addr"):
         if not spec.get(k):
             fails.append("S-A/E 缺 %s（開場識別/地址常駐是鐵則）" % k)
+        elif not isinstance(spec[k], str) or not spec[k].strip():
+            fails.append("SPEC %s 必須是非空字串" % k)
+    for k in ("name", "platform"):
+        if k in spec and (not isinstance(spec[k], str) or not spec[k].strip()):
+            fails.append("SPEC %s 必須是非空字串" % k)
     fails.extend(_validate_spec_shape(spec))
     if fails:
         return False, _report(fails, warns)
@@ -500,7 +529,7 @@ def _attach_addr(spec: dict, rep: dict) -> dict:
 def assert_shorts(spec: dict, rules: dict = None) -> dict:
     return make_assert(
         lambda value: gate_shorts(value, rules),
-        lambda value: value.get("name", "?"),
+        lambda value: value.get("name", "?") if isinstance(value, dict) else "?",
         "Shorts gate FAIL",
         post=_attach_addr,
     )(spec)
@@ -554,7 +583,7 @@ def _selftest_body(check):
 
     # 首刀過長
     slow = mk(segs=[(dummy, 2.0, 3.5), (dummy, 5.0, 3.0), (dummy, 9.0, 3.0),
-                    (dummy, 13.0, 3.5), (dummy, -1.5, 3.5)])
+                    (dummy, 13.0, 3.5), (dummy, 0.0, 2.0)])
     ok3, r3 = gate_shorts(slow)
     check("slow first cut fails", not ok3 and any("S-C" in f for f in r3["fails"]))
 
