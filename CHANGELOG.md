@@ -1,5 +1,19 @@
 ## Unreleased — gates fail closed on malformed input; media fixes found in upstream review (2026-10-25)
 
+- **Adopted from upstream PR #26 / Package D (maintainer decision 2026-10-25, issue #4).** Three behaviour changes:
+  - `TONEMAP_FILTER` uses `zscale=t=linear:npl=100` (was 250). HDR (HLG / HDR10) sources are no longer pushed
+    ~2.5x darker: the same HLG input goes from grey Y 63 to about 91, so finished clips look brighter.
+  - `plan_gate` P4 accepts only a line-start stamp `合規：通過 YYYY-MM-DD 複核：<name>` with a real, non-future date
+    and a human reviewer (no `AI`/`codex` etc.; negations, pending words, placeholders and contradicting stamps
+    fail). `interview_gate` I-B accepts only typed sources — `url:http(s)://…`, `file:<existing path>` (relative to
+    `base_dir`) or `sha256:<64 hex>` — and I-E scans every string field for placeholders. `gate_core.is_placeholder`
+    is the shared check; `interview_autopilot plan` gains `--reviewer`; `examples/PLAN_TEMPLATE.md` and
+    `examples/05_interview_plan.py` follow. **Existing plan files and `_guest.py` sources written in the old free-text
+    format now fail and must be rewritten.**
+  - `shorts_gate._nchars` counts half-width characters as 0.5 and full-width as 1 (spaces 0), so English and mixed
+    captions are no longer over-counted by S-R; the 5 / 7 chars-per-second thresholds are unchanged and pure
+    Chinese captions behave as before.
+
 - `gate_shorts` now returns a `SPEC ...` BLOCK instead of raising for a non-dict spec, non-string
   `place` / `what` / `addr` / `name` / `platform`, and a negative segment `in_sec`. `assert_shorts(None)`
   raises the normal `Shorts gate FAIL` assertion. Malformed `_scan.json` clips and rows (non-dict, non-numeric,

@@ -33,6 +33,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import unicodedata
 
 import os
 import sys
@@ -86,8 +87,15 @@ SR_WARN = 5.0                      # 字/秒 > 5 → warn
 SR_FAIL = 7.0                      # 字/秒 > 7 → fail（讀不完=白寫）
 
 
-def _nchars(txt: str) -> int:
-    return sum(1 for ch in txt if not ch.isspace())
+def _nchars(txt: str) -> float:
+    """閱讀單位：全形（CJK／全形標點／emoji）計 1、半形英數與符號計 0.5、空白不計。
+
+    同東亞排版的全形／半形寬度；英文與中英混排字幕因此能用同一組 S-R 門檻，
+    不會把 15 個英文字母當成 15 個中文字而誤擋。純中文字幕的結果不變。
+    維護者 2026-10-25 決定採用（上游 PR #26）。
+    """
+    return sum(1.0 if unicodedata.east_asian_width(ch) in ("W", "F") else 0.5
+               for ch in txt if not ch.isspace())
 
 # ── S-P 高風險宣稱 lint（2026-08-04：一輪對抗稽核推翻 29 條字幕後歸納落地）
 # 29 條裡八成落在六類**機器抓得到**的詞。規則不是禁用這些詞——
@@ -499,7 +507,7 @@ def gate_shorts(spec: dict, rules: dict = None):
         dwell_ = max(en_ - st_, 0.01)
         cps = n / dwell_
         if cps > calibrated["sr_fail"]:
-            fails.append("S-R 讀不完：%r %d 字只停 %.2fs = %.1f 字/秒（上限 %.0f）"
+            fails.append("S-R 讀不完：%r %.1f 字只停 %.2fs = %.1f 字/秒（上限 %.0f）"
                          % (blocks[0][0].replace("\n", "/")[:12], n, dwell_, cps,
                             calibrated["sr_fail"]))
         elif cps > calibrated["sr_warn"]:

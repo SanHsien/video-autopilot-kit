@@ -1,5 +1,20 @@
 # 維護決策
 
+## 2026-10-25：維護者決定採用上游三項改動（issue #4）
+
+**決定**：維護者 2026-10-25 決定採用 issue #4 列出的三項（上一則審查原列為「需要維護者決定」），照上游做法移植、
+不硬套 diff（兩邊無共同祖先；本 fork 保留自己較精準的 P3 整格佔位判斷與 P5）。每項都有測試釘住新行為。
+
+| 項目 | 上游 | 本 fork 做法 | 影響範圍 |
+| --- | --- | --- | --- |
+| `TONEMAP_FILTER` `npl` 250 → 100 | PR #26 `c9e7936` | 只改 `silent_vlog_maker/constants.py` 的 `zscale=t=linear:npl=` 數值與註解；本 fork 沒有 `visual_master`，不併 `HDR_TO_SDR_FILTER` | 所有走 `TONEMAP_FILTER` 的 HDR（HLG／HDR10）→ SDR 輸出（`effects`、`pipeline`）：同一 HLG 輸入灰階 Y 約 63 → 91，成品**變亮**（不再整體壓暗 2.5 倍）。SDR 素材不經此濾鏡，不受影響 |
+| `plan_gate` P4 + `interview_gate` 來源 | Package D `aa53359`、`f8faa80` | P4 只認**行首**「合規：通過 YYYY-MM-DD 複核：姓名」：日期要真實且不在未來、要有真人複核人（`AI`／`codex` 等機器名不算）、含否定／待辦／佔位字不算、多個互相矛盾的章不算。`interview_gate` 成就來源只收 `url:`（http/https）、`file:`（檔案須存在，相對路徑以 `base_dir` 為準）、`sha256:`（64 位 hex）；每個字串欄位都掃佔位字（I-E）。`gate_core` 新增共用 `is_placeholder()`。`interview_autopilot plan` 加 `--reviewer`（預設 `profiles/show.md` 的 `HOST_NAME`），簽章帶當天日期與複核人，`_guest.py` stub 改教型別化來源。`examples/PLAN_TEMPLATE.md` 改為「合規：待複核」、`examples/05_interview_plan.py` 改用 `url:` 來源 | **gate 契約變嚴**：舊格式「合規：通過（政策 checklist 2026-01-01）」與自由文字來源（「來賓提供後台截圖」）現在一律 FAIL，既有規劃檔與 `_guest.py` 需改成新格式。影響 `plan_gate`、`interview_gate`、`interview_autopilot`、`gate_core`、`examples/05`、`SETUP*.md`、`knowledge/interview-show-playbook.md` |
+| `_nchars` 半形 0.5 字 | PR #26 `shorts_gate.py` | 全形（東亞寬度 W／F）計 1、半形英數與符號計 0.5、空白不計；S-R 門檻 `SR_WARN=5`／`SR_FAIL=7` 字/秒**數值不變**（單位仍是「字」，上游同樣不調數值） | `shorts_gate` S-R 讀速：純中文字幕結果不變；英文與中英混排字幕等於放寬一倍（14 個英文字母停 1.2 秒，舊算法 11.7 字/秒 FAIL，現為 5.8 字/秒 WARN）。S-R 訊息字數改顯示一位小數 |
+
+**例外沿用上游的取捨**：P3 不採上游的「重複配對／標題=縮圖」剔除與 `is_placeholder` 整串判斷，沿用本 fork `c7b1879` 的整格佔位判斷（真標題含「概念一次」不誤判）；P5 同。
+
+**觸發條件**：上游再調整 P4 簽章格式、來源型別或 `npl`／半形權重時，逐條比對；若實拍 HLG 素材覺得過亮，改回需先重測 Y 值並更新本條。
+
 ## 2026-10-25：上游 16 個 commit、PR #24–#29、issue #30 審查（PR #25 以自有實作補上）
 
 **決定**：`reviewed_through` 推進至 `a50c73b`、PR 水位 29、issue 水位 30。PR #25 與 PR #26 指出的缺陷中，
@@ -11,7 +26,7 @@
 | PR #25（draft，`9e4e5a1`、`d2e64b3`、`8da386f`） | **自行實作** | 本 fork 實測：`gate_shorts(None)`／`[]` 拋 `AttributeError`；`place=123`、`what=[...]` 拋 `TypeError`；`platform=[...]` 拋 `unhashable`；壞掉的 `_scan.json`（非 dict row、字串數值）拋 `AttributeError`／`TypeError`；`in_sec < 0` 被放行。全部改成回 `SPEC ...` BLOCK，壞 `_scan.json` 的 clip／row 逐筆略過（單列 NaN 不再讓 S-Q 消失）；內嵌 self-test 的 `-1.5` 起點同步改為 `0.0`。上游範例改寫（`examples/04`）與 `CAPTION_COLOR_KEYS` 不收：本 fork 範例可用，顏色仍由 `resolve_color` 單一來源檢查 |
 | PR #24（open，`adabe83`） | 不引用 | 33 檔，改動集中在 `publish_hub`／`workflow_*`／`review_policy`／`editkin_voiceover_gate`，本 fork 都沒有 |
 | PR #26（draft，26 筆，`58a8e3b`..`f8a06cc`） | **部分自行實作** | 125 檔，其中與本 fork 共有 37 檔（程式與範例 24 檔，其餘 13 檔為 README／SETUP／knowledge 文件）。逐檔讀程式 diff、在本 fork 重現後，以自有最小修正補上：`gate_core` fail-closed（`ok=False` 無理由、缺 `fails`、零條 check）、`plan_gate` 佔位字（`PLAN_TEMPLATE.md` 原樣竟能 PASS）、`interview_gate` 成就／來源 `TODO` 殘留（`aa53359`）；`effects.kenburns_*` 的 `s=W:H` 讓 ffmpeg 直接拒絕、zoom 錨左上、pan 寫死 2400:1350 壓扁直式；`fx_lib.double_bloom` 透明黑滲入光暈；`constants` threads 缺 `-colorspace`；`shorts_vertical` 成品無色彩標記、相鄰拉丁色塊黏字（`c9e7936`、`be40a38`）；`quality_check.verify_output` 無音軌／probe 失敗回空 issues（`c0c71f5`）；`script_gate.load_vocab` 字串被拆成單字元、不收 `Path`（`b89e9a0`）；`shorts_gate.merge_rules` 收 NaN／字串／倒置死區；`text_overlay.signature_bottom` 框底 1679 超出本 fork SAFE_ZONE 1660；`examples/04` 文件寫 3 個 blocking 實為 2 個＋1 WARN |
-| PR #26 其餘 | 不引用 | `plan_gate` P4 改要人名＋非未來日期簽章、`interview_gate` 只收 URL／路徑／SHA-256 來源：會改 gate 契約與 `examples/05`，本 fork 只擋佔位字。`_nchars` 半形計 0.5 字：S-R 門檻語意改變。`shorts_vertical`／`shorts_captions` 量寬換行、`TEXT_SAFE_RECT`：依賴本 fork 沒有的 `caption_director`／`art_direction`。`TONEMAP_FILTER` npl 250→100：成品亮度觀感改變（列入需要維護者決定）。backport／release／workflow_state／review_loop／outcome_learning／startup_update 等：本 fork 沒有對應模組。上游自述 CI 因私有 canonical receipt 不符而紅 |
+| PR #26 其餘 | 不引用（其中三項已改採用，見上方 2026-10-25「維護者決定採用」條目） | `shorts_vertical`／`shorts_captions` 量寬換行、`TEXT_SAFE_RECT`：依賴本 fork 沒有的 `caption_director`／`art_direction`。backport／release／workflow_state／review_loop／outcome_learning／startup_update 等：本 fork 沒有對應模組。上游自述 CI 因私有 canonical receipt 不符而紅 |
 | `14d368e`、`6afc789`（#27） | 不引用 | 把 `shorts_gate`／`script_gate`／`word_captions`／`shorts_vertical` 拆成 `*_commands.py`／`*_validation.py`／`caption_grouping.py` 等模組，是結構重組不是缺陷修正；可獨立的 gate 修正已由 PR #25 那列涵蓋 |
 | `0a173d5`、`1b48784`、`f2ecc46`、`18b59d5`、`179ab30`、`dd6b058` | 不引用 | Cleanup bundle、release metadata、`scripts/public_*`、`sync-receipt.json`；共有檔 0 個 |
 | `278fce0` | 不適用 | macOS `/var → /private/var` 實體暫存根，配合上游 path control；本 fork 的 `system_health.py` 是自有版本、沒有該 path control |
@@ -21,7 +36,7 @@
 
 **觸發條件**：本 fork 決定改以 Editkin 渲染、或採用上游模組化的 gate 拆分時重評 `14d368e`／`6afc789`／`cfd92c4`；
 上游若再修 gate 輸入驗證，逐條比對本 fork `_validate_spec_shape`／`gate_core` 是否仍缺；本 fork 若自寫字幕量寬
-換行（`caption_director` 對應層），屆時重評 PR #26 的 `be40a38` 斷行與 `_nchars` 半形計數；PR #26 合併進上游
+換行（`caption_director` 對應層），屆時重評 PR #26 的 `be40a38` 斷行；PR #26 合併進上游
 main 時，其 commit 會出現在 commit 軸，以本列結論為準、只需比對合併後是否有新增改動。
 
 ## 2026-09-30：上游 29 個 commit、PR #17–#23、issue #15–#16 審查（無引用）

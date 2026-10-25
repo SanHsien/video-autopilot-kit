@@ -23,6 +23,8 @@ API:
 """
 from __future__ import annotations
 
+import re
+
 
 # ────────────────────────────────────────────── 回傳結構
 
@@ -126,6 +128,26 @@ def selftest_runner(cases, width: int = 50, list_fails: bool = False) -> int:
     return 0
 
 
+# ────────────────────────────────────────────── 佔位字偵測（各 gate 共用）
+
+_PLACEHOLDER_RE = re.compile(
+    r"(?<![A-Za-z])(?:TODO|TBD|FIXME|XXX|YYYY|MM-DD)(?![A-Za-z])"
+    r"|(?<![期等對接招款看虐優善])待(?:補|填|定|查|寫|確|提供|來賓|對方|人工|複核|審|核實|處理|更新)"
+    r"|未(?:提供|填)|(?:候選|概念)[一二三四五六七八九十0-9０-９]|你的(?:主題詞|名字|cluster)"
+    r"|\{[^{}\n]*\}", re.IGNORECASE)
+_PLACEHOLDER_WHOLE_RE = re.compile(
+    r"[?？.。…\-—_＿\s]*|N/?A|none|null|無|沒有|不明|未知", re.IGNORECASE)
+
+
+def is_placeholder(text) -> bool:
+    """True = 空字串或仍是模板佔位字（TODO/TBD/待補/待來賓提供/YYYY/候選一/{你的…}/?/N/A）。
+
+    各 gate 擋「看起來有填、其實是佔位」的欄位都走這裡，避免每個 gate 各寫一套漏網規則。
+    """
+    s = str(text if text is not None else "").strip()
+    return bool(_PLACEHOLDER_WHOLE_RE.fullmatch(s) or _PLACEHOLDER_RE.search(s))
+
+
 # ────────────────────────────────────────────── 自身 self-test
 
 def _selftest() -> int:
@@ -185,7 +207,18 @@ def _selftest() -> int:
         except AssertionError:
             check("raise_if_failed raises when fails list is missing", True)
 
+        _selftest_placeholders(check)
+
     return selftest_runner(body, width=54)
+
+
+def _selftest_placeholders(check):
+    for text in ("", "  ", "TODO 補來源", "todo", "待來賓提供", "（待補）", "TBD", "?", "N/A",
+                 "YYYY-MM-DD", "標題候選一", "縮圖概念八", "你的主題詞", "{你的名字}", "未提供"):
+        check("is_placeholder(%s)" % ascii(text), is_placeholder(text))
+    for text in ("App 下載 5,000", "url:https://example.com/proof", "期待的那一天",
+                 "等待審核三週", "AI 剪輯", "怎麼做到的？", "Todoist 教學"):
+        check("not placeholder %s" % ascii(text), not is_placeholder(text))
 
 
 if __name__ == "__main__":

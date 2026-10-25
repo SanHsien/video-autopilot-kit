@@ -17,11 +17,14 @@ SAFE_ZONE = {
 
 
 # ─────────────────────────────────────────────────────────────────────
-# R10: HDR HLG/HDR10 → SDR BT.709 (tonemap=hable, npl=250 for iPhone HLG)
+# R10: HDR HLG/HDR10 → SDR BT.709 (tonemap=hable, npl=100)
 # ─────────────────────────────────────────────────────────────────────
 
+# npl=100 maps SDR reference white (100 cd/m2) to linear 1.0, so HDR diffuse white
+# (~203 cd/m2) is rolled off by hable instead of the whole picture being pushed
+# 2.5x darker as with the old npl=250.  Maintainer decision 2026-10-25 (upstream PR #26).
 TONEMAP_FILTER = (
-    "zscale=t=linear:npl=250,"
+    "zscale=t=linear:npl=100,"
     "format=gbrpf32le,"
     "zscale=p=bt709,"
     "tonemap=tonemap=hable:desat=0,"
