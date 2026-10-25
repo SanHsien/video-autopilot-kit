@@ -43,10 +43,26 @@ def raise_if_failed(rep: dict, label: str, title: str) -> None:
         [<label>] <title>:
           - 第一條
           - 第二條
+
+    fail-closed：rep 不是 dict、缺 fails list、或 ok 為假卻沒列理由，也一律 raise。
     """
-    fails = rep.get("fails") or []
+    fails = _failure_lines(rep)
     if fails:
         raise AssertionError("[%s] %s:\n  - %s" % (label, title, "\n  - ".join(fails)))
+
+
+def _failure_lines(rep) -> list:
+    """rep -> 要列出的失敗理由；回空 list 才算真的過關。"""
+    if not isinstance(rep, dict):
+        return ["gate report is not a dict (contract violation)"]
+    fails = rep.get("fails")
+    if not isinstance(fails, (list, tuple)):
+        return ["gate report has no 'fails' list (contract violation)"]
+    if fails:
+        return [str(f) for f in fails]
+    if not rep.get("ok", True):
+        return ["gate returned ok=False without listing a reason"]
+    return []
 
 
 def make_assert(gate_fn, label_fn, title: str, print_warns: bool = False, post=None):
@@ -57,9 +73,13 @@ def make_assert(gate_fn, label_fn, title: str, print_warns: bool = False, post=N
     title       : "Shorts gate FAIL" 這類標題（訊息語意由各 gate 自己決定）
     print_warns : True = 過關後把 warns 印成 "   WARN xxx"
     post        : (spec, rep) -> 回傳值；None = 原樣回傳 spec
+
+    tuple 的 ok 為假時一律 raise，不只看 fails 欄位。
     """
     def _assert(spec):
-        _ok, rep = gate_fn(spec)
+        ok, rep = gate_fn(spec)
+        if not ok and isinstance(rep, dict):
+            rep = dict(rep, ok=False)
         raise_if_failed(rep, label_fn(spec), title)
         if print_warns:
             for w in rep.get("warns") or []:
@@ -76,12 +96,13 @@ def selftest_runner(cases, width: int = 50, list_fails: bool = False) -> int:
     cases 兩種寫法：
       - callable(check)：把 check(name, cond) 交給你，body 內想怎麼跑都行（主用法）
       - [(name, cond), ...]：純資料表
-    回傳 0=全綠 / 1=有紅（給 `raise SystemExit(...)` 用）。
+    回傳 0=全綠 / 1=有紅（給 `raise SystemExit(...)` 用）；一條 check 都沒跑 = 紅。
     """
-    failed = []
+    failed, ran = [], []
 
     def check(name, cond):
         print("[%s] %s" % ("PASS" if cond else "FAIL", name))
+        ran.append(name)
         if not cond:
             failed.append(name)
 
@@ -92,6 +113,9 @@ def selftest_runner(cases, width: int = 50, list_fails: bool = False) -> int:
             check(name, cond)
 
     print("-" * width)
+    if not ran:
+        print("SELFTEST RED: no checks ran")
+        return 1
     if failed:
         print("SELFTEST RED: %d failed" % len(failed))
         if list_fails:
@@ -144,6 +168,22 @@ def _selftest() -> int:
         check("selftest_runner green -> 0", rc_green == 0)
         check("selftest_runner red -> 1", rc_red == 1)
         check("selftest_runner prints per-case lines", "[PASS] inner ok" in buf.getvalue())
+        with contextlib.redirect_stdout(_io.StringIO()):
+            rc_empty = selftest_runner([], width=8)
+        check("selftest_runner with zero checks -> 1", rc_empty == 1)
+
+        silent = make_assert(lambda s: (False, {"fails": [], "warns": []}),
+                             lambda s: "x", "Demo gate FAIL")
+        try:
+            silent({})
+            check("make_assert raises on ok=False with empty fails", False)
+        except AssertionError:
+            check("make_assert raises on ok=False with empty fails", True)
+        try:
+            raise_if_failed({"ok": True}, "t1", "Demo gate FAIL")
+            check("raise_if_failed raises when fails list is missing", False)
+        except AssertionError:
+            check("raise_if_failed raises when fails list is missing", True)
 
     return selftest_runner(body, width=54)
 

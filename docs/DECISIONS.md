@@ -2,15 +2,16 @@
 
 ## 2026-10-25：上游 16 個 commit、PR #24–#29、issue #30 審查（PR #25 以自有實作補上）
 
-**決定**：`reviewed_through` 推進至 `a50c73b`、PR 水位 29、issue 水位 30。只有 PR #25 指出的缺陷在本 fork
-實測存在，以本 fork 自己的最小修正補上（不 cherry-pick，因上游已把 gate 拆成本 fork 沒有的
-`shorts_gate_validation.py`）；其餘不引用。
+**決定**：`reviewed_through` 推進至 `a50c73b`、PR 水位 29、issue 水位 30。PR #25 與 PR #26 指出的缺陷中，
+本 fork 實測存在者以自己的最小修正補上（不 cherry-pick：上游已把 gate 拆成本 fork 沒有的
+`*_validation.py`，且兩邊無共同祖先）；其餘不引用。
 
 | 範圍 | 結論 | 證據與理由 |
 | --- | --- | --- |
-| PR #25（draft，`9e4e5a1`、`d2e64b3`、`8da386f`） | **自行實作** | 本 fork 實測：`gate_shorts(None)`／`[]` 拋 `AttributeError`；`place=123`、`what=[...]` 拋 `TypeError`；`platform=[...]` 拋 `unhashable`；壞掉的 `_scan.json`（非 dict row、字串數值）拋 `AttributeError`／`TypeError`；`in_sec < 0` 被放行。全部改成回 `SPEC ...` BLOCK，壞 `_scan.json` 視同不存在；內嵌 self-test 的 `-1.5` 起點同步改為 `0.0`。上游範例改寫（`examples/04`）與 `CAPTION_COLOR_KEYS` 不收：本 fork 範例可用，顏色仍由 `resolve_color` 單一來源檢查 |
+| PR #25（draft，`9e4e5a1`、`d2e64b3`、`8da386f`） | **自行實作** | 本 fork 實測：`gate_shorts(None)`／`[]` 拋 `AttributeError`；`place=123`、`what=[...]` 拋 `TypeError`；`platform=[...]` 拋 `unhashable`；壞掉的 `_scan.json`（非 dict row、字串數值）拋 `AttributeError`／`TypeError`；`in_sec < 0` 被放行。全部改成回 `SPEC ...` BLOCK，壞 `_scan.json` 的 clip／row 逐筆略過（單列 NaN 不再讓 S-Q 消失）；內嵌 self-test 的 `-1.5` 起點同步改為 `0.0`。上游範例改寫（`examples/04`）與 `CAPTION_COLOR_KEYS` 不收：本 fork 範例可用，顏色仍由 `resolve_color` 單一來源檢查 |
 | PR #24（open，`adabe83`） | 不引用 | 33 檔，改動集中在 `publish_hub`／`workflow_*`／`review_policy`／`editkin_voiceover_gate`，本 fork 都沒有 |
-| PR #26（draft，10 筆） | 不引用 | 125 檔的 Editkin skill／visual_master／workflow_state 優化包；上游自述 CI 因私有 canonical receipt 不符而紅 |
+| PR #26（draft，26 筆，`58a8e3b`..`f8a06cc`） | **部分自行實作** | 125 檔，其中與本 fork 共有 37 檔（程式與範例 24 檔，其餘 13 檔為 README／SETUP／knowledge 文件）。逐檔讀程式 diff、在本 fork 重現後，以自有最小修正補上：`gate_core` fail-closed（`ok=False` 無理由、缺 `fails`、零條 check）、`plan_gate` 佔位字（`PLAN_TEMPLATE.md` 原樣竟能 PASS）、`interview_gate` 成就／來源 `TODO` 殘留（`aa53359`）；`effects.kenburns_*` 的 `s=W:H` 讓 ffmpeg 直接拒絕、zoom 錨左上、pan 寫死 2400:1350 壓扁直式；`fx_lib.double_bloom` 透明黑滲入光暈；`constants` threads 缺 `-colorspace`；`shorts_vertical` 成品無色彩標記、相鄰拉丁色塊黏字（`c9e7936`、`be40a38`）；`quality_check.verify_output` 無音軌／probe 失敗回空 issues（`c0c71f5`）；`script_gate.load_vocab` 字串被拆成單字元、不收 `Path`（`b89e9a0`）；`shorts_gate.merge_rules` 收 NaN／字串／倒置死區；`text_overlay.signature_bottom` 框底 1679 超出本 fork SAFE_ZONE 1660；`examples/04` 文件寫 3 個 blocking 實為 2 個＋1 WARN |
+| PR #26 其餘 | 不引用 | `plan_gate` P4 改要人名＋非未來日期簽章、`interview_gate` 只收 URL／路徑／SHA-256 來源：會改 gate 契約與 `examples/05`，本 fork 只擋佔位字。`_nchars` 半形計 0.5 字：S-R 門檻語意改變。`shorts_vertical`／`shorts_captions` 量寬換行、`TEXT_SAFE_RECT`：依賴本 fork 沒有的 `caption_director`／`art_direction`。`TONEMAP_FILTER` npl 250→100：成品亮度觀感改變（列入需要維護者決定）。backport／release／workflow_state／review_loop／outcome_learning／startup_update 等：本 fork 沒有對應模組。上游自述 CI 因私有 canonical receipt 不符而紅 |
 | `14d368e`、`6afc789`（#27） | 不引用 | 把 `shorts_gate`／`script_gate`／`word_captions`／`shorts_vertical` 拆成 `*_commands.py`／`*_validation.py`／`caption_grouping.py` 等模組，是結構重組不是缺陷修正；可獨立的 gate 修正已由 PR #25 那列涵蓋 |
 | `0a173d5`、`1b48784`、`f2ecc46`、`18b59d5`、`179ab30`、`dd6b058` | 不引用 | Cleanup bundle、release metadata、`scripts/public_*`、`sync-receipt.json`；共有檔 0 個 |
 | `278fce0` | 不適用 | macOS `/var → /private/var` 實體暫存根，配合上游 path control；本 fork 的 `system_health.py` 是自有版本、沒有該 path control |
@@ -19,7 +20,9 @@
 | issue #30（closed） | 不適用 | Editkin 0.15 Windows GPU 預覽 spawn 失敗；屬上游桌面 app，本 fork 不含 |
 
 **觸發條件**：本 fork 決定改以 Editkin 渲染、或採用上游模組化的 gate 拆分時重評 `14d368e`／`6afc789`／`cfd92c4`；
-上游若再修 gate 輸入驗證，逐條比對本 fork `_validate_spec_shape` 是否仍缺。
+上游若再修 gate 輸入驗證，逐條比對本 fork `_validate_spec_shape`／`gate_core` 是否仍缺；本 fork 若自寫字幕量寬
+換行（`caption_director` 對應層），屆時重評 PR #26 的 `be40a38` 斷行與 `_nchars` 半形計數；PR #26 合併進上游
+main 時，其 commit 會出現在 commit 軸，以本列結論為準、只需比對合併後是否有新增改動。
 
 ## 2026-09-30：上游 29 個 commit、PR #17–#23、issue #15–#16 審查（無引用）
 

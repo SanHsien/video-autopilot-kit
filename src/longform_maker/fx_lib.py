@@ -120,15 +120,31 @@ def glow_pulse(base_rgba, frame, fps=30, period_s=2.0, lo=0.55, hi=1.0):
     ph = (frame / fps) / period_s * 2 * math.pi
     return lo + (hi - lo) * (0.5 + 0.5 * math.sin(ph))
 
+def _glow_colour(layer):
+    """元素的光量加權平均色（亮的填色主導，深色描邊幾乎不染色）。"""
+    box = layer.getbbox()
+    if not box:
+        return (255, 255, 255)
+    crop = layer.crop(box)
+    rgb = np.asarray(crop.convert("RGB"), dtype=np.float32)
+    weight = np.asarray(crop.getchannel("A"), dtype=np.float32) * (
+        rgb @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32) + 1.0)
+    mean = (rgb * weight[..., None]).sum(axis=(0, 1)) / max(float(weight.sum()), 1e-6)
+    return tuple(int(round(float(v))) for v in mean)
+
 def double_bloom(layer, tight=4, wide=16, tight_op=0.60, wide_op=0.30, boost=0.0):
     """雙層 additive bloom：tight blur + wide blur 疊在銳利元素下面。
     layer=RGBA（透明底上的亮元素）。boost 0..1 額外加亮（落地脈衝用）。
     回傳同尺寸 RGBA（glow 疊好 + 原元素在頂）。"""
+    colour = _glow_colour(layer)
     def _scaled(src, blur, op):
-        g = src.filter(ImageFilter.GaussianBlur(blur))
+        # 只模糊 alpha 遮罩再填光暈色：直接模糊 straight RGBA 會把透明黑混進光暈，
+        # 元素周圍背景反而變暗。
+        g = Image.new("RGBA", src.size, colour + (0,))
+        mask = src.getchannel("A").filter(ImageFilter.GaussianBlur(blur))
         if op < 1.0:
-            a = g.getchannel("A").point(lambda v: int(v * op))
-            g.putalpha(a)
+            mask = mask.point(lambda v: int(v * op))
+        g.putalpha(mask)
         return g
     out = Image.new("RGBA", layer.size, (0, 0, 0, 0))
     out.alpha_composite(_scaled(layer, wide, min(1.0, wide_op * (1 + boost * 1.6))))

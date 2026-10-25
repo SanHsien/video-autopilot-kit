@@ -108,7 +108,8 @@ POSITION_PRESETS = {
         "box": True, "box_color": BOX_DARK, "box_pad": 26,
     },
     "signature_bottom": {
-        "fs": 74, "x": "(w-tw)/2", "y": str(SAFE_ZONE["bottom"] - 100),
+        # 框底 = y + 字高(~1.2×fs) + box_pad；-100 時約 1679 會壓到 SAFE_ZONE 底線 1660
+        "fs": 74, "x": "(w-tw)/2", "y": str(SAFE_ZONE["bottom"] - 130),
         "color": COLOR_GOLD, "font": FONT_NOTO_BLACK,
         "box": True, "box_color": BOX_DARK, "box_pad": 30,
     },

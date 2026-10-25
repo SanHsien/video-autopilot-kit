@@ -93,9 +93,9 @@ try:
     from gate_core import raise_if_failed as _raise_if_failed
 except ImportError:                                   # 單檔複製出去也要能跑
     def _raise_if_failed(rep: dict, label: str, title: str) -> None:
-        if rep.get("fails"):
+        if rep.get("fails") or not rep.get("ok", True):
             raise AssertionError("[%s] %s:\n  - %s"
-                                 % (label, title, "\n  - ".join(rep["fails"])))
+                                 % (label, title, "\n  - ".join(rep.get("fails") or ["ok=False"])))
 
 
 # ───────────────────────────────────────────── 節目 profile（profiles/show.md）

@@ -36,7 +36,8 @@ Baseline 代表「已審查」，不代表「全部已合併」。
 ## 2026-10-25：審至 `a50c73b`
 
 - commit：`b449e7a..a50c73b` 共 16 筆（v0.24.0–v0.25.0），不引用；v0.25.0 退役本 fork 仍在用的 `silent_vlog_maker` 與 render 端。
-- PR：`#24..#29`；#25 的 Shorts gate 惡意輸入 BLOCK 在本 fork 實測存在，以自有實作補上，其餘未收。
+- PR：`#24..#29`；#25（Shorts gate 惡意輸入）與 #26（gate fail-closed、Ken Burns、bloom、QA、色彩標記等）中
+  本 fork 實測存在的缺陷以自有實作補上，其餘未收。
 - issue：`#30` 為 Editkin 桌面 app GPU 預覽問題，不適用。
 
 分類與證據見 [`DECISIONS.md`](DECISIONS.md) 同日條目。水位：commit `a50c73b`、PR #29、issue #30。

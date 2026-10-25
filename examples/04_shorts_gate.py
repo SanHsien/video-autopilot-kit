@@ -7,8 +7,8 @@ Example 04 — the vertical-Shorts mechanical gate, with ZERO media and ZERO dep
 that fire at build time, so nobody has to remember them. This demo runs the gate
 three times:
 
-    1) a BROKEN spec  → 3 blocking failures (duration dead zone / slow first cut /
-                        missing opening ID)
+    1) a BROKEN spec  → 2 blocking failures (duration dead zone / slow first cut)
+                        plus an S-A warning (the "what is this" line is missing)
     2) the FIXED spec → passes, and the gate hands back caption times it computed
                         from segment indexes (you never hand-type timecodes)
     3) YOUR OWN band  → the same 31s spec that the default rules reject, accepted
@@ -85,7 +85,7 @@ def show(title, spec, rules=None):
 
 
 def broken():
-    """Three rule breaks at once — each one alone is enough to block the build."""
+    """Three rule breaks at once: S-B and S-C each block the build, S-A only warns."""
     return dict(
         name="short_demo_broken",
         place="RVR",
@@ -110,7 +110,7 @@ def broken():
 
 
 def fixed():
-    """Same footage plan, all three breaks repaired."""
+    """Same footage plan, all three issues repaired."""
     return dict(
         name="short_demo_fixed",
         place="RVR",

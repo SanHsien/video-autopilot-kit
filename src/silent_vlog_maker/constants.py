@@ -77,7 +77,7 @@ ENCODE_ARGS_BY_PLATFORM = {
         "-c:v", "h264_nvenc", "-preset", "p5", "-rc", "vbr",
         "-b:v", "5M", "-maxrate", "7M", "-bufsize", "10M",
         "-profile:v", "high", "-pix_fmt", "yuv420p",
-        "-color_primaries", "bt709", "-color_trc", "bt709",
+        "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
         "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
         "-movflags", "+faststart",
     ],

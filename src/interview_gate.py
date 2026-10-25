@@ -38,11 +38,11 @@ except ImportError:                       # ── fallback：單檔複製也要
 
     def make_assert(gate_fn, label_fn, title, print_warns=False, post=None):
         def _assert(spec):
-            _ok, rep = gate_fn(spec)
-            if rep.get("fails"):
+            ok, rep = gate_fn(spec)
+            if rep.get("fails") or not ok:
                 raise AssertionError("[%s] %s:\n  - %s"
                                      % (label_fn(spec), title,
-                                        "\n  - ".join(rep["fails"])))
+                                        "\n  - ".join(rep.get("fails") or ["ok=False"])))
             if print_warns:
                 for w in rep.get("warns") or []:
                     print("   WARN " + w)
@@ -50,10 +50,11 @@ except ImportError:                       # ── fallback：單檔複製也要
         return _assert
 
     def selftest_runner(cases, width=50, list_fails=False):
-        failed = []
+        failed, ran = [], []
 
         def check(name, cond):
             print("[%s] %s" % ("PASS" if cond else "FAIL", name))
+            ran.append(name)
             if not cond:
                 failed.append(name)
 
@@ -63,6 +64,9 @@ except ImportError:                       # ── fallback：單檔複製也要
             for name, cond in cases:
                 check(name, cond)
         print("-" * width)
+        if not ran:
+            print("SELFTEST RED: no checks ran")
+            return 1
         if failed:
             print("SELFTEST RED: %d failed" % len(failed))
             if list_fails:
@@ -97,6 +101,8 @@ def gate_guest(g: dict):
         if not str(a[1]).strip():
             fails.append("I-B achievements[%d] %r 沒標來源（M10：每個數字都要有出處）"
                          % (i, a[0]))
+        elif any(str(v).strip().startswith("TODO") for v in a[:2]):
+            fails.append("I-E achievements[%d] 還是 TODO" % i)
 
     shots = g.get("screenshots_ok") or []
     if not shots:

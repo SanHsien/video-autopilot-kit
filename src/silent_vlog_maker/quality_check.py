@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def verify_output(mp4_path: Path, expected_outro: bool = True,
-                  bgm_only: bool = False) -> dict:
+                  bgm_only: bool = False, expected_audio: bool = True) -> dict:
     """Auto-verify a finished mp4. Returns issues dict — empty means clean.
 
     Catches:
@@ -23,6 +23,7 @@ def verify_output(mp4_path: Path, expected_outro: bool = True,
         mp4_path: final mp4 (from CapCut Export or fallback)
         expected_outro: True if mp4 should have outro card → verify visible
         bgm_only: True = 無口播 silent vlog（追加 -22 LUFS 上限檢查）
+        expected_audio: True = 缺音軌或串流 probe 失敗都記成 issue（不再當成乾淨）
 
     Returns:
         {
@@ -59,7 +60,11 @@ def verify_output(mp4_path: Path, expected_outro: bool = True,
          "-show_entries", "stream=codec_type", "-of", "csv=p=0"],
         capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
-    has_audio = "audio" in loud.stdout
+    has_audio = loud.returncode == 0 and "audio" in loud.stdout
+    if loud.returncode != 0:
+        issues.append("stream probe failed — audio check inconclusive")
+    elif not has_audio and expected_audio:
+        issues.append("no audio track — finished mp4 is silent (pass expected_audio=False if intended)")
 
     if has_audio:
         loud2 = subprocess.run(

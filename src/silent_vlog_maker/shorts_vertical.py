@@ -70,6 +70,11 @@ def _ts(t):
     h = int(t // 3600); m = int(t % 3600 // 60); s = t % 60
     return "%d:%02d:%05.2f" % (h, m, s)
 
+_LATIN_END = re.compile(r'[A-Za-z0-9]$')
+_LATIN_START = re.compile(r'[A-Za-z0-9]')
+# 成品色彩標記：不標的話播放端只能猜（SDR 直式一律 BT.709）
+_BT709 = ['-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709']
+
 def build_multicolor_ass(blocks, out_path):
     """blocks: list of (start, end, segs, kind)。
     segs=[(text,color), ...] color∈w/o/y/r/g（'\\n' 換行）；kind='main'|'addr'。
@@ -78,9 +83,13 @@ def build_multicolor_ass(blocks, out_path):
     for start, end, segs, kind in blocks:
         pos = _ADDR_POS if kind == 'addr' else _MAIN_POS
         style = 'ADDR' if kind == 'addr' else 'MAIN'
-        body = ""
+        body, prev = "", ""
         for text, color in segs:
-            body += COLOR_VARIETY.get(color, COLOR_VARIETY['w']) + strip_emoji(text).replace('\n', r'\N')
+            text = strip_emoji(text)
+            # 相鄰兩塊都是拉丁英數字時補空格：否則 "kit"+"demo" 會黏成 "kitdemo"
+            gap = " " if _LATIN_END.search(prev) and _LATIN_START.match(text) else ""
+            body += gap + COLOR_VARIETY.get(color, COLOR_VARIETY['w']) + text.replace('\n', r'\N')
+            prev = text
         lines.append("Dialogue: 0,%s,%s,%s,,0,0,0,,%s%s" % (_ts(start), _ts(end), style, pos, body))
     open(out_path, 'w', encoding='utf-8').write("\n".join(lines))
     return out_path
@@ -93,7 +102,7 @@ def normalize_to_portrait(clip_in, clip_out, crf=19):
     vf = ('scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,'
           'fps=30,setsar=1,format=yuv420p')
     r = _run(['ffmpeg', '-v', 'error', '-y', '-i', clip_in, '-vf', vf, '-an',
-              '-c:v', 'libx264', '-crf', str(crf), '-preset', 'medium', clip_out])
+              '-c:v', 'libx264', '-crf', str(crf), '-preset', 'medium', *_BT709, clip_out])
     if r.returncode:
         raise RuntimeError('normalize_to_portrait failed: ' + r.stderr[-500:])
     return clip_out
@@ -195,7 +204,7 @@ def build_one_short(segs, caps, bgm, out, vol=0.42, fade=1.2, bgm_start='auto'):
     fc = ';'.join(parts) + ';' + labs + f'concat=n={len(segs)}:v=1:a=0[vout]'
     vis = base + '_vis.mp4'
     r = _run(cmd + ['-filter_complex', fc, '-map', '[vout]', '-an', '-c:v', 'libx264',
-                    '-crf', '19', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-r', '30', vis])
+                    '-crf', '19', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-r', '30', *_BT709, vis])
     if r.returncode:
         raise RuntimeError('build_one_short visual failed: ' + r.stderr[-500:])
     # 2) captions — 一律在 out 目錄內跑 + 全用 basename：ass filter 的值若含 Windows
@@ -206,7 +215,8 @@ def build_one_short(segs, caps, bgm, out, vol=0.42, fade=1.2, bgm_start='auto'):
     workdir = os.path.dirname(os.path.abspath(out)) or '.'
     r = subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', os.path.basename(vis),
                         '-vf', 'ass=' + os.path.basename(ass), '-c:v', 'libx264', '-crf', '19',
-                        '-preset', 'medium', '-pix_fmt', 'yuv420p', '-r', '30', os.path.basename(cap)],
+                        '-preset', 'medium', '-pix_fmt', 'yuv420p', '-r', '30', *_BT709,
+                        os.path.basename(cap)],
                        capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=workdir)
     if r.returncode:
         raise RuntimeError('build_one_short caption failed: ' + r.stderr[-500:])

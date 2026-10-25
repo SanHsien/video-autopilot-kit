@@ -144,15 +144,25 @@ def load_vocab(src) -> dict:
     比對一律轉小寫；重複呼叫 = **整組取代**，不是累加。
     """
     global SPOKEN_OK, SUBSTITUTE, NEED_PAIR, HARD_BAN
-    if isinstance(src, str):
+    if isinstance(src, (str, os.PathLike)):
         with open(src, "r", encoding="utf-8") as f:
             data = json.load(f)
-    else:
+    elif src is None or isinstance(src, dict):
         data = dict(src or {})
+    else:
+        raise ValueError("load_vocab: src 必須是 JSON 路徑或 dict，收到 %s" % type(src).__name__)
+    if not isinstance(data, dict):
+        raise ValueError("load_vocab: 詞表 JSON 頂層必須是 object")
     data = {k: v for k, v in data.items() if not str(k).startswith("_")}
+    # 型別不符就擋：字串當 list 會被拆成單字元（"regex" → 每個字母都變禁詞）
+    for key, kind in (("spoken_ok", (list, tuple)), ("hard_ban", (list, tuple)),
+                      ("substitute", dict), ("need_pair", dict)):
+        if data.get(key) is not None and not isinstance(data[key], kind):
+            raise ValueError("load_vocab: %s 必須是 %s" % (
+                key, "list" if kind is not dict else "object"))
     SPOKEN_OK = {str(w).lower() for w in (data.get("spoken_ok") or [])}
     SUBSTITUTE = {str(k).lower(): v for k, v in (data.get("substitute") or {}).items()}
-    NEED_PAIR = {str(k).lower(): list(v)
+    NEED_PAIR = {str(k).lower(): [v] if isinstance(v, str) else list(v)
                  for k, v in (data.get("need_pair") or {}).items()}
     HARD_BAN = [str(w).lower() for w in (data.get("hard_ban") or [])]
     return {"spoken_ok": len(SPOKEN_OK), "substitute": len(SUBSTITUTE),

@@ -145,32 +145,55 @@ def merge_rules(rules: dict = None, platform: str = None) -> dict:
         )
     merged = dict(DEFAULT_RULES)
     merged.update(PLATFORM_RULES[selected_platform])
+    if rules is not None and not isinstance(rules, dict):
+        raise AssertionError("rules must be a dict, got %s" % type(rules).__name__)
     for key, value in (rules or {}).items():
         if key not in DEFAULT_RULES:
             raise AssertionError(
                 "unknown rule key %r; valid: %s"
                 % (key, ", ".join(sorted(DEFAULT_RULES)))
             )
+        if not _valid_rule_value(key, value):
+            raise AssertionError("invalid rule value %s=%r" % (key, value))
         merged[key] = value
+    if merged["dur_min"] >= merged["dur_max"]:
+        raise AssertionError("dur_min %r must be < dur_max %r"
+                             % (merged["dur_min"], merged["dur_max"]))
     return merged
 
 
-def _scan_shape_ok(j) -> bool:
-    """_scan.json 須是 {clips: [{name: str, rows: [{t/bright/sharp: 有限數字}]}]}。"""
-    if not isinstance(j, dict) or not isinstance(j.get("clips", []), list):
-        return False
-    for c in j.get("clips", []):
-        if (not isinstance(c, dict) or not isinstance(c.get("name", "?"), str)
-                or not isinstance(c.get("rows", []), list)):
-            return False
-        for r in c.get("rows", []):
-            if not isinstance(r, dict):
-                return False
-            for key in ("t", "bright", "sharp"):
-                v = r.get(key, 0.0)
-                if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
-                    return False
-    return True
+def _rule_number(value) -> bool:
+    return (not isinstance(value, bool) and isinstance(value, (int, float))
+            and math.isfinite(value) and value >= 0)
+
+
+def _valid_rule_value(key: str, value) -> bool:
+    """NaN/字串/倒置死區會讓規則靜默失效或崩潰 → 覆寫值一律先驗型別與範圍。"""
+    if key == "white_tokens":
+        return (isinstance(value, (list, tuple)) and bool(value)
+                and all(isinstance(t, str) and t for t in value))
+    if key == "dur_deadzone":
+        return value is None or (
+            isinstance(value, (list, tuple)) and len(value) == 2
+            and all(_rule_number(v) for v in value) and value[0] < value[1])
+    return _rule_number(value)
+
+
+def _scan_rows(j):
+    """_scan.json -> [(clip 名, row)]；壞掉的 clip/row（非 dict、非有限數字）逐筆略過，不讓 gate 崩潰。"""
+    clips = j.get("clips", []) if isinstance(j, dict) else []
+    out = []
+    for c in clips if isinstance(clips, list) else []:
+        if not isinstance(c, dict) or not isinstance(c.get("name", "?"), str):
+            continue
+        rows = c.get("rows", [])
+        for r in rows if isinstance(rows, list) else []:
+            if isinstance(r, dict) and all(
+                    not isinstance(r[k], bool) and isinstance(r[k], (int, float))
+                    and math.isfinite(r[k])
+                    for k in ("t", "bright", "sharp") if k in r):
+                out.append((c.get("name", "?"), r))
+    return out
 
 
 def _first_frame_quality(spec: dict):
@@ -184,17 +207,14 @@ def _first_frame_quality(spec: dict):
             j = json.load(f)
     except Exception:
         return None
-    if not _scan_shape_ok(j):                  # 壞掉的 _scan.json 等同沒有，不讓 gate 崩潰
-        return None
     stem0 = os.path.splitext(os.path.basename(str(clip0)))[0]
     pool, chosen = [], None
-    for c in j.get("clips", []):
-        for r in c.get("rows", []):
-            if 40 <= r.get("bright", 128) <= 225:          # 全黑/全爆的幀不算候選
-                pool.append((r.get("sharp", 0.0), c.get("name", "?"), r.get("t", 0.0)))
-            if c.get("name") == stem0 and abs(r.get("t", -9.0) - in0) <= 0.26:
-                if chosen is None or abs(r["t"] - in0) < abs(chosen[2] - in0):
-                    chosen = (r.get("sharp", 0.0), c.get("name"), r.get("t"))
+    for cname, r in _scan_rows(j):
+        if 40 <= r.get("bright", 128) <= 225:          # 全黑/全爆的幀不算候選
+            pool.append((r.get("sharp", 0.0), cname, r.get("t", 0.0)))
+        if cname == stem0 and abs(r.get("t", -9.0) - in0) <= 0.26:
+            if chosen is None or abs(r["t"] - in0) < abs(chosen[2] - in0):
+                chosen = (r.get("sharp", 0.0), cname, r.get("t"))
     if not pool or chosen is None:
         return None
     return {"chosen": chosen, "best": max(pool),

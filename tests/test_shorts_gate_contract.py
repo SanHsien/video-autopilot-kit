@@ -83,6 +83,35 @@ def test_unknown_rule_key_fails_closed() -> None:
 
 
 @pytest.mark.parametrize(
+    "rules",
+    [
+        {"first_cut_max": float("nan")},
+        {"first_cut_max": float("inf")},
+        {"dur_min": "10"},
+        {"loop_tol": True},
+        {"sr_fail": -1.0},
+        {"dur_deadzone": (40.0, 30.0)},
+        {"dur_deadzone": (30.0,)},
+        {"white_tokens": "white"},
+        {"dur_min": 30.0, "dur_max": 20.0},
+        ["first_cut_max", 3.0],
+    ],
+)
+def test_invalid_rule_values_fail_closed(rules) -> None:
+    with pytest.raises(AssertionError, match="rule|rules|dur_min"):
+        shorts_gate.merge_rules(rules)
+
+
+def test_valid_rule_overrides_still_merge() -> None:
+    merged = shorts_gate.merge_rules(
+        {"dur_deadzone": None, "white_tokens": ["white", "cream"], "nonwhite_max_colors": 3}
+    )
+
+    assert merged["dur_deadzone"] is None
+    assert merged["nonwhite_max_colors"] == 3
+
+
+@pytest.mark.parametrize(
     "changes",
     [
         {"segs": None},
@@ -170,6 +199,32 @@ def test_malformed_frame_scan_is_ignored(tmp_path: Path, scan) -> None:
     )
 
     assert ok, report["fails"]
+
+
+def test_bad_frame_scan_rows_do_not_hide_the_first_frame_warning(tmp_path: Path) -> None:
+    import json
+
+    clip = tmp_path / "clip.mp4"
+    clip.write_bytes(b"")
+    rows = [
+        {"t": 2.0, "sharp": 10.0, "bright": 100},
+        {"t": 5.0, "sharp": 40.0, "bright": 100},
+        {"t": 7.0, "sharp": float("nan"), "bright": 100},
+        {"t": "9.0", "sharp": 99.0, "bright": 100},
+        "row",
+    ]
+    scan = {"clips": [{"name": "clip", "rows": rows}, "clip"]}
+    (tmp_path / "_scan.json").write_text(json.dumps(scan), encoding="utf-8")
+    spec = make_long_spec()
+    spec["segs"] = [(str(clip), start, duration) for _old, start, duration in spec["segs"]]
+
+    ok, report = shorts_gate.gate_shorts(
+        spec,
+        {"dur_min": 26.0, "dur_max": 60.0, "dur_deadzone": None},
+    )
+
+    assert ok, report["fails"]
+    assert any("S-Q" in warning and "clip@5.0s=40.0" in warning for warning in report["warns"])
 
 
 def test_assert_shorts_names_a_non_dict_spec() -> None:

@@ -31,6 +31,16 @@ _PAIR_RE = re.compile(r"^\s*(?:\d+[.)、]|[-*])\s*.+?\s*\|\s*.+$", re.MULTILINE)
 _COMPLIANCE_RE = re.compile(r"合規[:：]\s*(通過|PASS|✓)")
 _CLUSTER_RE = re.compile(r"cluster\s*關鍵字[:：]\s*\S+", re.IGNORECASE)
 _EXPECTED_RE = re.compile(r"Expected\s*Views|期望值對標", re.IGNORECASE)
+# 模板佔位字：沒換掉就等於沒填（PLAN_TEMPLATE.md 原樣不得過關）
+_PLACEHOLDER_RE = re.compile(
+    r"(?<![A-Za-z])(?:TODO|TBD|FIXME|YYYY|MM-DD)(?![A-Za-z])|你的主題詞"
+    r"|(?:候選|概念)[一二三四五六七八九十0-9０-９]", re.IGNORECASE)
+
+
+def _line_at(text: str, match) -> str:
+    start = text.rfind("\n", 0, match.start()) + 1
+    end = text.find("\n", match.end())
+    return text[start:] if end < 0 else text[start:end]
 
 
 def gate_plan(text: str):
@@ -49,14 +59,20 @@ def gate_plan(text: str):
         seg = text[pkg.end():]
         nxt = re.search(r"^#+\s", seg, re.MULTILINE)
         seg = seg[: nxt.start()] if nxt else seg
-        n_pairs = len(_PAIR_RE.findall(seg))
+        n_pairs = len([p for p in _PAIR_RE.findall(seg) if not _PLACEHOLDER_RE.search(p)])
     if n_pairs < 8:
         fails.append("P3 包裝候選不足（%d/8 組『標題 | 縮圖』；包不出來=砍題）" % n_pairs)
 
-    if not _COMPLIANCE_RE.search(text):
+    m_comp = _COMPLIANCE_RE.search(text)
+    if not m_comp:
         fails.append("P4 缺合規標記（合規：通過 = 平台 AI 內容政策 checklist 先過）")
-    if not _CLUSTER_RE.search(text):
+    elif _PLACEHOLDER_RE.search(_line_at(text, m_comp)):
+        fails.append("P4 合規行仍是模板佔位（日期/簽章沒填 = 沒有人真的跑過 checklist）")
+    m_cluster = _CLUSTER_RE.search(text)
+    if not m_cluster:
         fails.append("P5 缺 cluster 關鍵字")
+    elif _PLACEHOLDER_RE.search(_line_at(text, m_cluster)):
+        fails.append("P5 cluster 關鍵字仍是模板佔位")
 
     if not _EXPECTED_RE.search(text):
         warns.append("W1 無 Expected Views 對標行")
@@ -80,7 +96,7 @@ def _selftest() -> int:
         "# 示範片0X 規劃\n框架：成就\n機器：推薦\ncluster關鍵字：示範主題\n"
         "合規：通過（政策 checklist 2026-01-01）\nExpected Views 對標：9,999 中位 x3\n"
         "## 包裝候選\n" + "\n".join(
-            "%d. 標題候選%d | 縮圖概念%d" % (i, i, i) for i in range(1, 10)) + "\n## 其他\n"
+            "%d. 實際標題%d | 實際縮圖%d" % (i, i, i) for i in range(1, 10)) + "\n## 其他\n"
     )
     ok1, r1 = gate_plan(good)
     check("good plan passes", ok1)
@@ -101,6 +117,11 @@ def _selftest() -> int:
     few_text = few[0] + "## 包裝候選\n1. 只有一組 | 縮圖\n## 其他\n"
     ok4, r4 = gate_plan(few_text)
     check("few pairs fails P3", not ok4 and any("P3" in f for f in r4["fails"]))
+
+    tpl = good.replace("2026-01-01", "YYYY-MM-DD").replace("示範主題", "你的主題詞")
+    ok5, r5 = gate_plan(tpl)
+    check("template placeholders fail P4/P5",
+          not ok5 and {f[:2] for f in r5["fails"]} == {"P4", "P5"})
 
     print("-" * 50)
     if fails:

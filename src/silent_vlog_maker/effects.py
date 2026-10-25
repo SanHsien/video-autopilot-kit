@@ -22,10 +22,13 @@ def kenburns_zoom_in(duration_sec: float, fps: int = 30, target_scale: str = "10
     # 前置 scale/crop 跟著 target_scale 走 — 之前寫死 1920:1080，直式 1080:1920
     # 會被 zoompan 拉成變形（2026-06-10 audit）
     tw, th = target_scale.split(":")
+    # zoompan 的 s 必須寫 WxH（冒號會被當成選項分隔→ffmpeg 直接拒絕）；
+    # zoom 以畫面中心為錨、平均分攤到每一幀，不再提早頂到上限停住
     return (
         f"scale={tw}:{th}:force_original_aspect_ratio=increase,"
         f"crop={tw}:{th},"
-        f"zoompan=z='min(zoom+0.0015,{zoom_max})':d={frames}:s={target_scale}:fps={fps}"
+        f"zoompan=z='1+({zoom_max}-1)*on/{max(1, frames - 1)}':"
+        f"x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d={frames}:s={tw}x{th}:fps={fps}"
     )
 
 
@@ -34,12 +37,16 @@ def kenburns_pan_right(duration_sec: float, fps: int = 30, target_scale: str = "
     frames = int(duration_sec * fps)
     # x 在 zoompan 合法範圍 [0, iw-iw/zoom] 內由左掃到右 — 舊式子起點超界被 clamp
     # 且隨時間遞減（實際是向左/不動），從未真正 pan right（2026-06-10 audit）
+    tw, th = (int(value) for value in target_scale.split(":"))
+    span = max(1, frames - 1)
+    # 前置畫布跟著 target 比例留 1.25x 餘裕（舊的寫死 2400:1350 會把直式壓扁）
     return (
-        f"scale=2400:1350:force_original_aspect_ratio=increase,"
-        f"zoompan=z='min(zoom+0.0008,1.1)':"
-        f"x='(iw-iw/zoom)*on/{frames}':"
+        f"scale={tw * 5 // 4}:{th * 5 // 4}:force_original_aspect_ratio=increase,"
+        f"crop={tw * 5 // 4}:{th * 5 // 4},"
+        f"zoompan=z='1+0.1*on/{span}':"
+        f"x='(iw-iw/zoom)*on/{span}':"
         f"y='ih/2-(ih/zoom/2)':"
-        f"d={frames}:s={target_scale}:fps={fps}"
+        f"d={frames}:s={tw}x{th}:fps={fps}"
     )
 
 
