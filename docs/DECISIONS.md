@@ -10,9 +10,9 @@
 - **掃描（PLAYBOOK 判準八）**：取 `Hao0321/video-autopilot-kit` PR #22／#24／#25／#26 目前 head
   （`ba0db4d`、`adabe83`、`8da386f`、`f8a06cc`）與 `b449e7a..a50c73b` 全範圍 diff，找行內長空白後接內容、`eval(`、
   `new Function(`、`globalThis`／`global.require`、200 字以上 base64、120 字以上 hex、超過 600 字元的單行：
-  只有縮排對齊的續行、`ast.literal_eval`（PR #25，安全）與文件長行，無隱藏內容，不需拒收。
+  只有縮排對齊的續行、`ast.literal_eval`／`_safe_eval`、自測用的 `exec(compile(_GUEST_STUB…))`（PR #26）與文件長行，無隱藏內容，不需拒收。
 - **清理**：遠端分支 `claude/charming-sagan-ex1wvl`（`c7b1879`）與 `ci/job-names-20261024`（`8b3a511`）內容已在 `main`
-  （後者為已合併的 PR #3），無 open PR，已刪。
+  （後者為已 squash 合併的 PR #3，遠端早已刪除），無 open PR；`claude/charming-sagan-ex1wvl` 於推送後刪除。
 
 ## 2026-10-25：維護者決定採用上游三項改動（issue #4）
 

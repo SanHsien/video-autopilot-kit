@@ -18,7 +18,7 @@ premium stack from `knowledge/premium-motion-fx.md`:
 Run:
     python examples/03_premium_fx.py
 
-Needs: Python 3.9+, Pillow, numpy, and `ffmpeg` on your PATH. Output:
+Needs: Python 3.12+ (Path 1 runtime), Pillow>=13, numpy, and `ffmpeg` on your PATH. Output:
     out/premium_fx_demo.mp4  (1280x720, ~3s, 30fps, with sound)
 """
 import os
