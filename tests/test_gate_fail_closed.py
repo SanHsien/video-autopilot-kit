@@ -272,4 +272,3 @@ def test_is_placeholder_distinguishes_real_text() -> None:
         assert gate_core.is_placeholder(text), text
     for text in ("App 下載 5,000", "期待的那一天", "等待審核三週", "Todoist 教學"):
         assert not gate_core.is_placeholder(text), text
-
