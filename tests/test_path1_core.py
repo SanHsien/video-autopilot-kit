@@ -291,7 +291,7 @@ def test_clean_screen_recording_floor_rejects_nan(monkeypatch, head, tail) -> No
 
     monkeypatch.setattr(screen_clean, "_dur", lambda _src: 60.0)
     monkeypatch.setattr(
-        screen_clean, "_run", lambda _a: pytest.fail("ffmpeg must not run when the trim floor fails")
+        screen_clean, "_run", lambda _a: pytest.fail("ffmpeg ran past the trim floor")
     )
     with pytest.raises(ValueError, match="M104"):
         screen_clean.clean_screen_recording("in.mp4", "out.mp4", "10:10:0:0", head, tail)
