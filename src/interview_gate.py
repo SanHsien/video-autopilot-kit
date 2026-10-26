@@ -170,6 +170,12 @@ def gate_guest(g: dict, base_dir=None):
         if text.strip() and is_placeholder(text):
             fails.append("I-E %s 還是佔位字（%r）" % (path, text[:40]))
 
+    shape = ["I-A %s 必須是 list，收到 %s" % (key, type(g[key]).__name__)
+             for key in ("achievements", "screenshots_ok", "links")
+             if g.get(key) and not isinstance(g[key], (list, tuple))]
+    if shape:                             # 型別不對就別往下迭代（int/float 會 TypeError）
+        return False, _report(fails + shape, warns)
+
     achv = g.get("achievements") or []
     fails.extend(_achievement_fails(achv, base_dir))
 

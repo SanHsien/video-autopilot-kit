@@ -288,3 +288,20 @@ def test_interview_gate_blocks_non_dict_instead_of_crashing(bad):
     assert ok is False and rep["fails"]
     with pytest.raises(AssertionError):
         interview_gate.assert_guest(bad)
+
+
+@pytest.mark.parametrize("field", ["achievements", "screenshots_ok", "links"])
+@pytest.mark.parametrize("bad", [1.5, 7, True, {"a": 1}])
+def test_interview_gate_blocks_non_list_collections(field, bad):
+    guest = {
+        "name": "小明",
+        "one_line": "做到某件事",
+        "start_state": "從零開始",
+        "demo": "現場示範",
+        "achievements": [("5,000 下載", "url:https://example.com/proof")],
+        "links": ["https://example.com"],
+        field: bad,
+    }
+    ok, rep = interview_gate.gate_guest(guest)
+    assert ok is False
+    assert any(field in failure for failure in rep["fails"])
