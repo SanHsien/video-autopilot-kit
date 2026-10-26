@@ -308,6 +308,9 @@ def _validate_spec_shape(spec: dict) -> list[str]:
             elif label == "in_sec" and number < 0:
                 failures.append(f"SPEC segs[{index}] in_sec 必須 >= 0")
 
+    if spec.get("evidence") not in (None, "", [], ()) and not isinstance(spec["evidence"], dict):
+        failures.append('SPEC evidence 必須是 {字幕原文: 怎麼驗過的} dict')
+
     captions = spec.get("caps_by_seg")
     if not isinstance(captions, (list, tuple)):
         failures.append("SPEC caps_by_seg 必須是 list/tuple")

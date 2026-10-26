@@ -285,3 +285,16 @@ def test_numeric_strings_in_segs_are_blocked_not_coerced(index: int, value: str)
 
     assert ok is False
     assert any("segs[1]" in failure for failure in report["fails"])
+
+
+@pytest.mark.parametrize("evidence", [["全部都是"], "frame: ok", 5])
+def test_malformed_evidence_is_blocked_not_crashed(evidence) -> None:
+    spec = make_long_spec()
+    spec["caps_by_seg"][2] = (2, [("全部都是石階", "white")], "sub")
+    spec["evidence"] = evidence
+    rules = {"dur_min": 26.0, "dur_max": 60.0, "dur_deadzone": None}
+
+    ok, report = shorts_gate.gate_shorts(spec, rules)
+
+    assert ok is False
+    assert any("evidence" in failure for failure in report["fails"])
