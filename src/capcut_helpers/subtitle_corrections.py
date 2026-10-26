@@ -154,7 +154,7 @@ def apply_subtitle_corrections(
             # 純 ASCII 詞 (clear/crowd/cloud/mybrand…) 必須 word-boundary，
             # 否則 "clearly"→"Claudely" / "crowded"→"Claudeed" (2026-06-10 audit)
             if wrong.isascii() and wrong.replace(" ", "").isalnum():
-                new_text, n = re.subn(rf"\b{re.escape(wrong)}\b", right, text)
+                new_text, n = re.subn(rf"\b{re.escape(wrong)}\b", lambda _m: right, text)  # 字面取代，非 re 樣板
                 if n == 0:
                     continue
                 text = new_text
