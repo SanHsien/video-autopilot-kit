@@ -296,12 +296,12 @@ def _validate_spec_shape(spec: dict) -> list[str]:
         if not isinstance(clip, (str, os.PathLike)):
             failures.append(f"SPEC segs[{index}] clip 必須是路徑")
         for label, value in (("in_sec", in_sec), ("dur", duration)):
-            try:
-                number = float(value)
-            except (TypeError, ValueError):
+            # 只收真正的數字：float("9.0") 會過，但後面的加總／比較用的是原值，字串會 TypeError
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
                 failures.append(f"SPEC segs[{index}] {label} 必須是數字")
                 continue
-            if isinstance(value, bool) or not math.isfinite(number):
+            number = float(value)
+            if not math.isfinite(number):
                 failures.append(f"SPEC segs[{index}] {label} 必須是有限數字")
             elif label == "dur" and number <= 0:
                 failures.append(f"SPEC segs[{index}] dur 必須 > 0")

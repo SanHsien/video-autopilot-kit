@@ -272,3 +272,16 @@ def test_english_caption_reading_rate_uses_half_weight() -> None:
     # 同樣長度的中文字（14 單位）停 1.2s 仍然是讀不完
     report = _reading_rate_report("一二三四五六七八九十甲乙丙丁", 1.2)
     assert any("S-R 讀不完" in f for f in report["fails"])
+
+
+@pytest.mark.parametrize("index,value", [(2, "9.0"), (1, "5.0")])
+def test_numeric_strings_in_segs_are_blocked_not_coerced(index: int, value: str) -> None:
+    spec = make_long_spec()
+    clip, in_sec, dur = spec["segs"][1]
+    spec["segs"][1] = (clip, value if index == 1 else in_sec, value if index == 2 else dur)
+
+    rules = {"dur_min": 26.0, "dur_max": 60.0, "dur_deadzone": None}
+    ok, report = shorts_gate.gate_shorts(spec, rules)
+
+    assert ok is False
+    assert any("segs[1]" in failure for failure in report["fails"])
