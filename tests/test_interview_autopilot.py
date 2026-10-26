@@ -29,3 +29,17 @@ def test_invite_guest_stub_round_trips_any_name(tmp_path, monkeypatch, name):
     exec(compile(source, "_guest.py", "exec"), scope)  # noqa: S102 - 剛產出的 stub
     assert scope["GUEST"]["name"] == name
     assert scope["GUEST"]["ep"] == "01"
+
+
+def test_render_keeps_double_parentheses_inside_filled_values(tmp_path, monkeypatch):
+    (tmp_path / "demo.template.md").write_text("Hi ((name)), ((topic))\n", encoding="utf-8")
+    monkeypatch.setattr(interview_autopilot, "TPL_DIR", str(tmp_path))
+    out = interview_autopilot.render("demo", name="用 ((AI)) 剪輯的人", topic="x")
+    assert out.strip() == "Hi 用 ((AI)) 剪輯的人, x"
+
+
+def test_render_still_rejects_unfilled_fields(tmp_path, monkeypatch):
+    (tmp_path / "demo.template.md").write_text("Hi ((name)) ((missing))\n", encoding="utf-8")
+    monkeypatch.setattr(interview_autopilot, "TPL_DIR", str(tmp_path))
+    with pytest.raises(ValueError, match="missing"):
+        interview_autopilot.render("demo", name="a")

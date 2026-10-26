@@ -184,9 +184,18 @@ def render(template_name: str, drop_marks=(), **fields) -> str:
     if drop_marks:
         text = "\n".join(ln for ln in text.splitlines()
                          if not any(m in ln for m in drop_marks))
-    text = _PH_RE.sub(lambda m: str(fields.get(m.group(1).strip(), m.group(0))), text)
+    unfilled = set()                      # 只算模板自己的欄位；填入值裡的 (( )) 是內容，不是漏填
 
-    left = sorted(set(_PH_RE.findall(text)))
+    def _fill(m):
+        key = m.group(1).strip()
+        if key in fields:
+            return str(fields[key])
+        unfilled.add(m.group(1))
+        return m.group(0)
+
+    text = _PH_RE.sub(_fill, text)
+
+    left = sorted(unfilled)
     if left:
         raise ValueError("%s 有未填欄位：%s" % (os.path.basename(path), "、".join(left)))
     return re.sub(r"\n{3,}", "\n\n", text).lstrip("\n")
