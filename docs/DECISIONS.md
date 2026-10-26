@@ -1,5 +1,18 @@
 # 維護決策
 
+## 2026-10-26：第二輪深度掃描（只看本 fork 自家程式；缺陷已各自修並附重現測試）
+
+修了什麼見 `CHANGELOG.md` Unreleased 的 Fixed 段。刻意**不修**、列為觀察清單（上游原有程式，或風險低且要動行為）：
+
+- `interview_autopilot` 的 `ep` 直接組進路徑（`../` 可穿出 `PLAN_ROOT`）。只有本機 CLI 使用者自己能傳，
+  不構成跨信任邊界；若日後包成服務或讓第三方餵 `ep` 再加 `[A-Za-z0-9_-]+` 驗證。
+- `shorts_autopilot.scan` 見到既有的 `_work/*.mp4` 就當成正規化完成，中斷過的半成品會被沿用。要改成
+  「寫暫存檔再改名」屬於產品行為變動，等有實際案例再做。
+- `tools/check_dependency_freshness.py` 的延後名單用 `name.lower()` 比對，`pre_commit` 與 `pre-commit` 視為不同；
+  目前兩邊都用連字號所以無影響，改名規範化前要先決定 PEP 503 全規則。
+- `build_exe.py` 的 `app_version` 與 `path1_core.APP_VERSION` 是兩份字面值，目前都是 `0.13.0`；改版時要同步。
+- `path1_gui._poll_events` 若事件處理丟例外就不再重排下一輪輪詢；目前找不到可觸發的輸入，只記錄。
+
 ## 2026-10-26：Path 1 要求 `Pillow>=13`（安全修補）；上游 PR 現行 head 隱藏內容掃描
 
 - **採用**：`requirements-path1.txt` 的 Pillow 下限由 12.3 升到 13。GitHub advisory 查到 Pillow

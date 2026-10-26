@@ -1,5 +1,22 @@
 ## Unreleased — gates fail closed on malformed input; media fixes found in upstream review (2026-10-25)
 
+- **Fixed (deep scan 2026-10-26, each with a reproducing test):**
+  - `interview_autopilot invite`: a guest name containing `"` or a Windows path (`C:
+ew`) produced a
+    `_guest.py` that did not compile (or silently rewrote ``); `ep`/`name` are now written as `repr()` literals.
+    `render()` no longer reports a bogus unfilled field when a filled value itself contains `((…))`.
+  - `screen_clean` / Path 1 screen cleaner: `NaN` (and `inf` in the GUI check) head/tail trims no longer pass
+    the M104 privacy floor; non-ASCII digits in the crop box are rejected up front.
+  - `plan_gate`, `interview_gate`, `shorts_gate` block malformed input (`None`, non-dict, non-list
+    `achievements`/`links`/`screenshots_ok`, numeric-string `segs` durations, non-dict `evidence`) instead of
+    raising `TypeError`/`AttributeError`.
+  - `channel_tracker.save_state` writes a temp file and `os.replace`s it, so a failed or interrupted save
+    keeps the previous `channel_state.json`.
+  - `apply_subtitle_corrections`: the replacement text is inserted literally (a backslash in a correction
+    used to become a newline or raise `re.error`).
+  - `tools/check_upstream_updates.py`: a missing `gh` is reported as "not checked" and a missing `git` as a
+    check failure, instead of a traceback.
+
 - **Adopted from upstream PR #26 / Package D (maintainer decision 2026-10-25, issue #4).** Three behaviour changes:
   - `TONEMAP_FILTER` uses `zscale=t=linear:npl=100` (was 250). HDR (HLG / HDR10) sources are no longer pushed
     ~2.5x darker: finished clips look brighter (the size of the change depends on the input).
