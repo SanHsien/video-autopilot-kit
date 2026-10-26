@@ -113,3 +113,19 @@ def test_upstream_slug(url, expected):
 def test_shipped_baseline_matches_the_documented_upstream():
     baseline = checker.load_baseline()
     assert checker.upstream_slug(baseline["repo"]) is not None
+
+
+def _missing_executable(*_args, **_kwargs):
+    raise FileNotFoundError(2, "The system cannot find the file specified")
+
+
+@pytest.mark.parametrize("kind", ["pr", "issue"])
+def test_missing_gh_reports_unchecked_instead_of_crashing(monkeypatch, kind):
+    monkeypatch.setattr(checker.subprocess, "run", _missing_executable)
+    assert checker.collect_new_tickets({"repo": "https://github.com/o/r.git"}, kind) is None
+
+
+def test_missing_git_is_a_reported_check_failure(monkeypatch, tmp_path):
+    monkeypatch.setattr(checker.subprocess, "run", _missing_executable)
+    with pytest.raises(checker.UpstreamCheckError):
+        checker.run_git(["status"], tmp_path)
