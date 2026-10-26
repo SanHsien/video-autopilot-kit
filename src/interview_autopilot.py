@@ -218,8 +218,8 @@ _GUEST_STUB = '''# -*- coding: utf-8 -*-
 沒有可驗證成就 = interview_gate 直接擋。"""
 
 GUEST = dict(
-    ep="%s",
-    name="%s",
+    ep=%s,
+    name=%s,
     one_line="TODO 一句話成就（他做到的那件事）",
     achievements=[
         # ("數字/成果", "url:https://公開頁面" 或 "file:screens/後台截圖.png" 或 "sha256:<64 位 hex>")
@@ -233,6 +233,12 @@ GUEST = dict(
     screenshots_ok=[],        # 同意上鏡的數據截圖清單（會寫進授權書第 3 條）
 )
 '''
+
+
+def guest_stub(ep: str, name: str) -> str:
+    """_guest.py 初稿。ep/name 以 repr 寫成 Python 字面值，引號、反斜線、換行都不會弄壞檔案。"""
+    label = re.sub(r"[^\w.-]", "_", str(ep))
+    return _GUEST_STUB % (label, repr(str(ep)), repr(str(name)))
 
 
 def build_invite(ep: str, name: str, hint: str = "", prof: dict = None) -> str:
@@ -252,7 +258,7 @@ def invite(ep: str, name: str, hint: str = "") -> str:
     _w(os.path.join(d, "EP%s_invite_pack.md" % ep), build_invite(ep, name, hint))
     gp = os.path.join(d, "_guest.py")
     if not os.path.exists(gp):
-        _w(gp, _GUEST_STUB % (ep, ep, name))
+        _w(gp, guest_stub(ep, name))
     print("[invite] EP%s 邀約包完成 -> %s" % (ep, d))
     return d
 
@@ -581,7 +587,7 @@ def _selftest_guest_gate(check, guest):
     """來賓資料 ↔ interview_gate：型別化來源才過；invite 產的 stub 原樣一定擋、且不教人寫佔位字。"""
     from interview_gate import gate_guest
     check("fixture guest with typed source passes interview_gate", gate_guest(guest)[0])
-    stub = _GUEST_STUB % ("00", "00", "小明")
+    stub = guest_stub("00", "小明")
     check("guest stub no longer tells you to write a placeholder source",
           "待來賓提供" not in stub and "url:" in stub and "sha256:" in stub)
     scope = {}
