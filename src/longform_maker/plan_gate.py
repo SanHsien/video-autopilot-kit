@@ -110,6 +110,10 @@ def _compliance_problem(text: str):
 
 
 def gate_plan(text: str):
+    if not isinstance(text, str):
+        return False, {"ok": False, "warns": [], "pairs": 0,
+                       "fails": ["P0 規劃文件必須是文字，收到 %s（拒收，不當成空文件猜）"
+                                 % type(text).__name__]}
     fails, warns = [], []
 
     m_frame = _FRAME_RE.search(text)

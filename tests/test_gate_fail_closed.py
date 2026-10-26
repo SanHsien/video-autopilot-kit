@@ -272,3 +272,19 @@ def test_is_placeholder_distinguishes_real_text() -> None:
         assert gate_core.is_placeholder(text), text
     for text in ("App 下載 5,000", "期待的那一天", "等待審核三週", "Todoist 教學"):
         assert not gate_core.is_placeholder(text), text
+
+
+@pytest.mark.parametrize("bad", [None, 123, b"x", ["a"], {"a": 1}])
+def test_plan_gate_blocks_non_text_instead_of_crashing(bad):
+    ok, rep = plan_gate.gate_plan(bad)
+    assert ok is False
+    assert rep["ok"] is False and rep["fails"]
+    assert rep["pairs"] == 0
+
+
+@pytest.mark.parametrize("bad", [None, 123, "guest", ["a"], b"x"])
+def test_interview_gate_blocks_non_dict_instead_of_crashing(bad):
+    ok, rep = interview_gate.gate_guest(bad)
+    assert ok is False and rep["fails"]
+    with pytest.raises(AssertionError):
+        interview_gate.assert_guest(bad)

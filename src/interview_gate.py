@@ -156,6 +156,9 @@ def _achievement_fails(achv, base_dir=None) -> list:
 
 
 def gate_guest(g: dict, base_dir=None):
+    if not isinstance(g, dict):
+        return False, _report(
+            ["I-A 來賓資料必須是 dict，收到 %s（拒收，不當成空資料猜）" % type(g).__name__])
     fails, warns = [], []
 
     for k in REQUIRED:
@@ -190,6 +193,8 @@ def gate_guest(g: dict, base_dir=None):
 
 
 def _guest_label(g) -> str:
+    if not isinstance(g, dict):
+        return "來賓資料"
     return "EP%s %s" % (g.get("ep", "?"), g.get("name", "?"))
 
 
