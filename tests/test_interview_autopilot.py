@@ -43,3 +43,4 @@ def test_render_still_rejects_unfilled_fields(tmp_path, monkeypatch):
     monkeypatch.setattr(interview_autopilot, "TPL_DIR", str(tmp_path))
     with pytest.raises(ValueError, match="missing"):
         interview_autopilot.render("demo", name="a")
+

@@ -41,8 +41,16 @@ def load_state(path: str = STATE_PATH) -> dict:
 
 
 def save_state(st: dict, path: str = STATE_PATH) -> None:
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(st, f, ensure_ascii=False, indent=1)
+    # 先整份序列化、寫暫存檔再換名：序列化失敗或寫到一半被中斷，舊的狀態檔原封不動
+    blob = json.dumps(st, ensure_ascii=False, indent=1)
+    tmp = "%s.%d.tmp" % (path, os.getpid())
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(blob)
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
 
 
 def _d(s: str) -> date:
