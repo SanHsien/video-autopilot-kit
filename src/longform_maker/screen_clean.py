@@ -57,9 +57,9 @@ def clean_screen_recording(src, out, crop, head_trim=1.0, tail_trim=2.0, blur=24
                  （例：引擎面板 header、editor 麵包屑——crop 救不了畫面中央的字）。
     回傳 out 路徑。
     """
-    if head_trim < MIN_HEAD_TRIM:
+    if not head_trim >= MIN_HEAD_TRIM:   # 寫成 not >=：NaN 也要擋
         raise ValueError(f"M104: head_trim={head_trim} < {MIN_HEAD_TRIM} — recorder UI lives in the first 0-1s; do not lower")
-    if tail_trim < MIN_TAIL_TRIM:
+    if not tail_trim >= MIN_TAIL_TRIM:
         raise ValueError(f"M104: tail_trim={tail_trim} < {MIN_TAIL_TRIM} — the stop-recording moment lives at the tail; do not lower")
     dur = _dur(src)
     usable = dur - head_trim - tail_trim

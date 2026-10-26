@@ -6,6 +6,7 @@ Programmatic pipeline，以及在 PyInstaller 模式下啟用隨附的 ffmpeg/ff
 from __future__ import annotations
 
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -201,7 +202,7 @@ def parse_screen_clean_options(
     if output_path.suffix.lower() != ".mp4":
         raise ValueError("清理後輸出必須是 .mp4")
     pieces = str(crop or "").strip().split(":")
-    if len(pieces) != 4 or any(not piece.isdigit() for piece in pieces):
+    if len(pieces) != 4 or any(not (piece.isascii() and piece.isdigit()) for piece in pieces):
         raise ValueError("裁切範圍必須是 W:H:X:Y 四個非負整數")
     width, height, _x, _y = (int(piece) for piece in pieces)
     if width <= 0 or height <= 0:
@@ -211,7 +212,7 @@ def parse_screen_clean_options(
         tail = float(tail_trim)
     except (TypeError, ValueError) as exc:
         raise ValueError("頭尾裁切秒數必須是數字") from exc
-    if head < 1 or tail < 1:
+    if not (math.isfinite(head) and math.isfinite(tail) and head >= 1 and tail >= 1):
         raise ValueError("為避免錄影 UI 外洩，頭尾都必須至少 1 秒")
     return source_path, output_path, str(crop), head, tail
 

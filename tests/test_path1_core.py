@@ -262,3 +262,36 @@ def test_dependency_status_reports_core_packages_and_tools(monkeypatch) -> None:
 
     assert set(status) == {"ffmpeg", "ffprobe", "numpy", "Pillow"}
     assert all(item["ok"] for item in status.values())
+
+
+@pytest.mark.parametrize("head,tail", [("nan", "2"), ("1", "nan"), ("inf", "2"), ("-inf", "2")])
+def test_parse_screen_clean_options_rejects_non_finite_trim(tmp_path, head, tail) -> None:
+    from path1_core import parse_screen_clean_options
+
+    source = tmp_path / "rec.mp4"
+    source.write_bytes(b"x")
+    with pytest.raises(ValueError):
+        parse_screen_clean_options(source, tmp_path / "clean.mp4", "1920:930:0:100", head, tail)
+
+
+@pytest.mark.parametrize("crop", ["1920:930:0:\u00b2", "\u0661\u0662:930:0:100"])
+def test_parse_screen_clean_options_rejects_non_ascii_digits(tmp_path, crop) -> None:
+    from path1_core import parse_screen_clean_options
+
+    source = tmp_path / "rec.mp4"
+    source.write_bytes(b"x")
+    with pytest.raises(ValueError, match="W:H:X:Y"):
+        parse_screen_clean_options(source, tmp_path / "clean.mp4", crop, "1", "2")
+
+
+@pytest.mark.parametrize("head,tail", [(float("nan"), 2.0), (1.0, float("nan"))])
+def test_clean_screen_recording_floor_rejects_nan(monkeypatch, head, tail) -> None:
+    sys.path.insert(0, str(ROOT / "src" / "longform_maker"))
+    import screen_clean
+
+    monkeypatch.setattr(screen_clean, "_dur", lambda _src: 60.0)
+    monkeypatch.setattr(
+        screen_clean, "_run", lambda _a: pytest.fail("ffmpeg must not run when the trim floor fails")
+    )
+    with pytest.raises(ValueError, match="M104"):
+        screen_clean.clean_screen_recording("in.mp4", "out.mp4", "10:10:0:0", head, tail)
