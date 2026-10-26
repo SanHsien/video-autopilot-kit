@@ -1,10 +1,9 @@
 ## Unreleased — gates fail closed on malformed input; media fixes found in upstream review (2026-10-25)
 
 - **Fixed (deep scan 2026-10-26, each with a reproducing test):**
-  - `interview_autopilot invite`: a guest name containing `"` or a Windows path (`C:
-ew`) produced a
-    `_guest.py` that did not compile (or silently rewrote ``); `ep`/`name` are now written as `repr()` literals.
-    `render()` no longer reports a bogus unfilled field when a filled value itself contains `((…))`.
+  - `interview_autopilot invite`: a guest name containing a double quote or a Windows path (`C:\new`) produced a
+    `_guest.py` that did not compile (or silently rewrote a backslash escape); `ep`/`name` are now written as `repr()` literals.
+    `render()` no longer reports a bogus unfilled field when a filled value itself contains `((...))`.
   - `screen_clean` / Path 1 screen cleaner: `NaN` (and `inf` in the GUI check) head/tail trims no longer pass
     the M104 privacy floor; non-ASCII digits in the crop box are rejected up front.
   - `plan_gate`, `interview_gate`, `shorts_gate` block malformed input (`None`, non-dict, non-list

@@ -14,7 +14,7 @@ import interview_autopilot  # noqa: E402
 TRICKY_NAMES = [
     'Dwayne "The Rock"',
     "C:\new\table",
-    "back\slash",
+    r"back\slash",
     "小明\n第二行",
     "o'brien",
 ]
