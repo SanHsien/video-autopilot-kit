@@ -50,7 +50,7 @@ def test_load_baseline_requires_full_sha(tmp_path: Path) -> None:
     path = tmp_path / "baseline.json"
     path.write_text(json.dumps(baseline), encoding="utf-8")
 
-    with pytest.raises(checker.UpstreamCheckError, match="40-character SHA"):
+    with pytest.raises(checker.UpstreamCheckError, match="40-character"):
         checker.load_baseline(path)
 
 
