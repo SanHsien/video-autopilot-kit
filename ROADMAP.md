@@ -14,7 +14,6 @@
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
 | 改寫 `REPO_REVIEW.md` 為現況版本 | 現行內容日期 2026-08-12、基準 `98bccee`、上游審至 `0aeaf48`，與現況（上游審至 `a50c73b`、Path 1 需 Python 3.12+、四個 gate 改為 fail-closed）不符；`FORK.md` 仍把它當「最近一次完整 repo review」指給接手的人 | `REPO_REVIEW.md` 的日期、基準 commit、上游水位與 `tools/upstream_baseline.json`、`docs/DECISIONS.md` 一致；列出的未修項目都能在 `docs/DECISIONS.md` 2026-10-26 觀察清單找到；`pwsh -NoProfile -File tools\dev_check.ps1` 綠 | Claude Sonnet | `REPO_REVIEW.md:1-6`；`FORK.md:22`；`docs/DECISIONS.md:3-14` |
-| 補 `interview_autopilot plan` 的接線測試：`--reviewer` 與 `base_dir` 真的傳到 `plan_gate`／`interview_gate`，以及 `interview_gate`／`interview_autopilot` 兩處單檔 fallback regex 一致 | 2026-10-25 採用的 P4 複核人與 I-B 型別化來源，目前只有 gate 本身的測試；CLI 少傳參數時 gate 會靜默用預設值而不報錯 | 新增測試：CLI 以 `--reviewer 某人` 產生的企劃通過 gate、不帶時失敗；兩處 regex 對同一組輸入結果相同；對應修改刪掉任一接線時測試變紅；`python -m pytest` 綠 | Claude Sonnet | `CHANGELOG.md` Unreleased 段 P4／I-B 條目與 fallback 一行；接續開發報告（2026-10-25）「刻意不做／延後」第二條 |
 
 ## 中期：等條件成立再做
 
