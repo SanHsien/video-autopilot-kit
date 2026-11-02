@@ -1,5 +1,16 @@
 # 維護決策
 
+## 2026-11-02：上游 issue #31 分流
+
+**裁決：不採用，不適用本 fork，ROADMAP 不留列。** #31（hoskin2668-bot，「Video Autopilot v0.25.0 contract validation fails with Editkin v0.15.0」，open）
+報的錯是 `WorkflowError: engineContinuity.motionSchemas requires current composition and scene schemas`，出自上游 `engine_continuity.py`
+的 `workflow_contract.py create`／`contract` 驗證階段。
+
+證據：`git ls-files | grep -iE "engine_continuity|workflow_contract|publish_hub"` 在本 fork 零命中；本 fork 沒有 v4 workflow contract 與
+Editkin 引擎銜接（見 2026-08-30 條目對 Editkin v4 轉向的結論），所以該驗證邏輯不存在，缺陷不在本線。上游無 commit 增量（`a50c73b` 仍是 tip，behind 0），PR 無新增（水位 29）。
+
+重看條件：本 fork 引入 `workflow_contract.py` 或 Editkin 契約驗證時，連同上游對 #31 的修法一併評估。`reviewed_issue_through` 推到 31。
+
 ## 2026-10-26：第二輪深度掃描（只看本 fork 自家程式；缺陷已各自修並附重現測試）
 
 修了什麼見 `CHANGELOG.md` Unreleased 的 Fixed 段。刻意**不修**、列為觀察清單（上游原有程式，或風險低且要動行為）：
