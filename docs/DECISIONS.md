@@ -1,5 +1,26 @@
 # 維護決策
 
+## 2026-11-06：pytest 9.2 新鮮度評估，維持相容性下限
+
+**決定**：在 `.github/dependency-deferrals.json` 記錄 pytest 的 `deferredLatest: 9.2`；不改
+`requirements-dev.txt` 的 `pytest>=9.1,<10`，也保留 Python 3.9 的 `pytest>=8.4,<9`。
+
+**理由**：[9.2.0 變更紀錄](https://docs.pytest.org/en/stable/changelog.html#pytest-9-2-0-2026-10-27)
+列出 `-c` 路徑檢查、parametrize 部分參數改為 keyword-only 與 plugin 匯入錯誤分類變更；
+[PyPI](https://pypi.org/project/pytest/9.2.0/) 仍要求 Python 3.10+，與既有主線 marker 相容。
+既有範圍已允許安裝 9.2.0，測試沒有需要提高下限的新版專屬功能；這是本次版本的評估紀錄，
+不是禁止解析或安裝新版，也不改變 Python 支援承諾。pre-commit 與 Ruff 仍由既有有效延後條目涵蓋。
+
+**重審條件**：PyPI 超過 9.2 時延後自動失效；若測試開始依賴 9.2 專屬功能，另行評估下限。
+
+**本機驗證**：Python 3.14／pytest 9.2.0，strict 新鮮度檢查 exit 0；完整 Windows gate 的
+compile、Ruff 與 pytest（249 passed、8 skipped）通過。受限環境使用
+`PYTEST_ADDOPTS=--basetemp=.pytest_cache/freshness-validation-final` 與
+`GIT_CEILING_DIRECTORIES=<worktree>/.pytest_cache`，避開共用暫存目錄 ACL 與父層 Git 探索。
+完整 gate exit 1：`word_captions`、`screen_clean`、`av_util` 的 ffmpeg／ffprobe 呼叫遭
+`PermissionError: [WinError 5]`；未完成完整媒體健康驗收。GitHub CLI 設定檔同樣遭拒絕存取，
+無法核對 workflow 的 Dependabot open PR 條件；本機 strict 綠燈不代表遠端 workflow 已成功。
+
 ## 2026-11-05：Python 3.9 的 CI 測試 leg 釘在 ubuntu-24.04
 
 **決定**：`.github/workflows/ci.yml` 的 ubuntu 的 Python 3.9 leg（matrix 新增 `runner: ubuntu-24.04`，`runs-on` 取 `matrix.runner || matrix.os`，job 名稱不變）改在 `ubuntu-24.04` 執行；其他 Python 版本與 Windows／macOS 不動。

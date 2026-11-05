@@ -1,5 +1,8 @@
 ## Unreleased — gates fail closed on malformed input; media fixes found in upstream review (2026-10-25)
 
+- **Maintenance (2026-11-06):** Reviewed pytest 9.2.0 and recorded a version-bounded freshness deferral;
+  keep the `>=9.1,<10` compatibility range and the separate Python 3.9 declaration. Releases beyond 9.2 reopen review.
+
 - **Fixed (deep scan 2026-10-26, each with a reproducing test):**
   - `interview_autopilot invite`: a guest name containing a double quote or a Windows path (`C:\new`) produced a
     `_guest.py` that did not compile (or silently rewrote a backslash escape); `ep`/`name` are now written as `repr()` literals.

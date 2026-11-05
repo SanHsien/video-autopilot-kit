@@ -1,5 +1,9 @@
 {
   "deferrals": {
+    "pytest": {
+      "deferredLatest": "9.2",
+      "reason": "2026-11-06 reviewed pytest 9.2.0 release notes and Python >=3.10 support: the existing >=9.1,<10 mainline already permits 9.2.0; 249 tests passed, 8 skipped on Python 3.14. No tests require a 9.2-only feature, so retain the compatibility floor and the separate Python 3.9 range. Full media health remains unverified due to local ffmpeg/ffprobe access denial. Re-review when PyPI advances beyond 9.2."
+    },
     "pre-commit": {
       "deferredLatest": "4.7",
       "reason": "2026-10-25 reviewed: the >=4.6,<5 range already resolves 4.7.0 in CI and `pre-commit run --all-files` stays green; dev-only tool, nothing needs a 4.7-only feature, so the 4.6 floor stays. 4.8 re-opens the review."
