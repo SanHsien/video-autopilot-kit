@@ -13,13 +13,16 @@ permissions:
 jobs:
   test:
     name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
+    # setup-python has no Python 3.9 build for Ubuntu 26.04 (ubuntu-latest), so 3.9 is pinned to 24.04;
+    # re-evaluate when the ubuntu-24.04 runner is retired or stops supporting 3.9.
+    runs-on: ${{ matrix.runner || matrix.os }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
+            runner: ubuntu-24.04
             python-version: "3.9"
           - os: windows-latest
             python-version: "3.14"

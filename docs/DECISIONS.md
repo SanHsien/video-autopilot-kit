@@ -1,5 +1,13 @@
 # 維護決策
 
+## 2026-11-05：Python 3.9 的 CI 測試 leg 釘在 ubuntu-24.04
+
+**決定**：`.github/workflows/ci.yml` 的 ubuntu 的 Python 3.9 leg（matrix 新增 `runner: ubuntu-24.04`，`runs-on` 取 `matrix.runner || matrix.os`，job 名稱不變）改在 `ubuntu-24.04` 執行；其他 Python 版本與 Windows／macOS 不動。
+
+**理由**：`ubuntu-latest` 已換成 Ubuntu 26.04，`actions/setup-python` 在該映像沒有 Python 3.9（官方 versions-manifest 的 3.9.25 只有 22.04、24.04），Set up Python 步驟會失敗：`The version '3.9' with architecture 'x64' was not found for Ubuntu 26.04`。此舉保住既有 Python 3.9 支援宣告的測試，不縮減矩陣。
+
+**重審條件**：`ubuntu-24.04` runner 退役或停止支援 Python 3.9、`setup-python` 補上 26.04 的 3.9 build、或決定放棄 Python 3.9 支援時，移除此釘版。
+
 ## 2026-11-02：上游 issue #31 分流
 
 **裁決：不採用，不適用本 fork，ROADMAP 不留列。** #31（hoskin2668-bot，「Video Autopilot v0.25.0 contract validation fails with Editkin v0.15.0」，open）
