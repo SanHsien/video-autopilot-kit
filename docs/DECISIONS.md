@@ -1,5 +1,25 @@
 # 維護決策
 
+## 2026-11-10：上游 4 個 commit（v0.26.0、v0.27.0）與 PR #32、#33 審查（無引用）
+
+**決定**：`reviewed_through` 推進至 `5bf9bce`、PR 水位 33、issue 水位 31 不動（上游 issue 無新編號）。
+`a50c73b..5bf9bce` 共 4 筆、34 檔、+2,324/-174（`git diff --shortstat a50c73b upstream/main`），全部不引用。
+
+| 範圍 | 結論 | 證據與理由 |
+| --- | --- | --- |
+| `e459c03`／`8811e25`（PR #32，v0.26.0，head `e459c03`） | 不引用 | 公開長片流程 `create-longform`：新增 `workflow_longform.py`、`workflow_longform_runtime.py`、`workflow_chapter_contract.py`、`workflow_longform_contract.json`，並改 `workflow_contract.py`／`workflow_state.py`／`workflow_receipts.py`／`workflow_primitives.py`，另有 `codex-skill/`、`scripts/public_*`、`release-manifest.json`、`sync-receipt.json`。`git ls-files -- '*workflow_*' '*ditkin*' 'codex-skill/*' AUTOPILOT_MANIFEST.json` 在本 fork 零命中，34 個變更檔中本 fork 也有的只有 6 個文件檔（`CHANGELOG.md`、`README.md`、`README.en.md`、`SETUP.md`、`SETUP.en.md`、`TROUBLESHOOTING.md`），沒有任何 `src/` 共有檔。本 fork 無 Editkin v4 workflow（見 2026-08-30、2026-11-02 條目） |
+| `06e2e61`／`5bf9bce`（PR #33，v0.27.0，head `06e2e61`） | 不引用 | 上游自述「只改文件與安裝說明」：安裝連結改指 Editkin 0.16.0、`EDITKIN_MCP_PROFILE=va`、`BLOCK_AESTHETIC`、`make_video`。全是 Editkin 桌面剪輯器的安裝與使用說明；本 fork 的 Path 1 不依賴也不打包 Editkin，照抄會讓本 fork 的 README／SETUP 把使用者導向它不使用的軟體，並蓋掉 fork 說明、開發段與回報分流。Editkin 0.16.0 轉為閉源 freeware 與本 fork 的 MIT 文件無關 |
+| 本 fork 六個共有文件檔 | 未改 | 沒有任何一處是對本 fork 功能的缺陷更正；fork 對上游檔沒有新的改寫，故 `FORK.md` 無須登記 |
+
+**隱藏內容掃描（判準八）**：對 `git diff a50c73b upstream/main` 全範圍找 `eval(`、`new Function`、`globalThis`、`global.require`、
+200 字以上 base64、120 字以上 hex、行內 20 個以上連續空白夾內容，皆 0 命中；超過 600 字元的單行只有 1 行
+（`public_workflow_distribution.py` 的 `WORKFLOW_EXECUTABLE_SOURCES` 檔名元組常數），無隱藏內容。
+`src/` 增量 `Hao0321`／`馬來西亞`／`桃園機場`／`IMG_5998` 0 命中；新增行的 `Hao0321` 全是 Editkin 專案網址（作者署名連結）。
+PR 內容以 `gh pr diff 32`、`gh pr diff 33`（唯讀）與本機 `git diff` 確認。
+
+**觸發條件**：本 fork 引入 `workflow_contract.py`／Editkin 契約，或決定支援長片多章節流程時，重評 PR #32 的長片 DAG
+設計；Editkin 授權或安裝方式若影響本 fork 文件所寫的整合邊界（`docs/INTEGRATIONS.md`）再回頭看 PR #33。
+
 ## 2026-11-06：pytest 9.2 新鮮度評估，維持相容性下限
 
 **決定**：在 `.github/dependency-deferrals.json` 記錄 pytest 的 `deferredLatest: 9.2`；不改
