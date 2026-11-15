@@ -102,6 +102,10 @@ pwsh -NoProfile -File tools\dev_check.ps1 -Quick
 
 ## 本機資料
 
+Audio-First 本機綠幕切片的 CLI、合成素材與量化驗收紀錄見
+[`audio-first-compositor-validation.md`](audio-first-compositor-validation.md)。量測只涵蓋固定合成素材；
+換成真實配音與綠幕素材時仍要調參並人工聽看。
+
 `profiles/`、`config.py`、媒體、逐字稿、CapCut 草稿、`examples/out/`、`videos/` 與各種
 planning/output 目錄不得提交。示範敏感流程時使用合成或已公開素材，並只保留最小驗證證據。
 

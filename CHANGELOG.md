@@ -1,5 +1,11 @@
 ## Unreleased — gates fail closed on malformed input; media fixes found in upstream review (2026-10-25)
 
+- **Added (2026-11-15):** Local Audio-First green-screen CLI
+  (`src/audio_first_compositor.py`) with narration-driven timing, chromakey/despill,
+  sidechain BGM ducking and exclusive output creation. Synthetic acceptance tests ran
+  against FFmpeg 9.0.2 (duration within one frame, pixel tolerance, 28.87 dB ducking);
+  commands, measured values and limits are in `docs/audio-first-compositor-validation.md`.
+
 - **Maintenance (2026-11-06):** Reviewed pytest 9.2.0 and recorded a version-bounded freshness deferral;
   keep the `>=9.1,<10` compatibility range and the separate Python 3.9 declaration. Releases beyond 9.2 reopen review.
 
