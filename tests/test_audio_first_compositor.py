@@ -71,6 +71,34 @@ def media(tmp_path):
     return [voice, fg, bg, music]
 
 
+def clip(path, source, *extra, codec=("-c:v", "libx264", "-pix_fmt", "yuv420p")):
+    ffmpeg("-f", "lavfi", "-i", f"{source}:s=160x128:r=30:d=0.5", *extra, *codec, path)
+
+
+def pixel_at(video, x, y, second=2):
+    rgb = ffmpeg(
+        "-ss", second, "-i", video, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"
+    )
+    return tuple(rgb[(y * 160 + x) * 3 : (y * 160 + x) * 3 + 3])
+
+
+def decode_pcm(video):
+    pcm = array.array(
+        "f", ffmpeg("-i", video, "-vn", "-ac", "1", "-ar", "48000", "-f", "f32le", "-")
+    )
+    if sys.byteorder != "little":
+        pcm.byteswap()
+    return pcm
+
+
+def ducking_db(video):
+    """BGM (1 kHz) level before narration relative to during narration."""
+    pcm = decode_pcm(video)
+    return 20 * math.log10(
+        spectral_amplitude(pcm, 0.3, 0.8, 1000) / spectral_amplitude(pcm, 1.5, 2.5, 1000)
+    )
+
+
 def spectral_amplitude(samples, start, end, frequency):
     section = samples[round(start * 48000) : round(end * 48000)]
     real = sum(v * math.cos(2 * math.pi * frequency * i / 48000) for i, v in enumerate(section))
@@ -102,27 +130,21 @@ def test_synthetic_acceptance(media, tmp_path):
         "aac",
     )
     ffmpeg("-xerror", "-i", output, "-f", "null", "-")
-    rgb = ffmpeg(
-        "-ss", "2", "-i", output, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"
-    )
     pixels = {}
     for name, x, y, expected in (
         ("foreground", 80, 64, (255, 0, 0)),
         ("background", 16, 16, (0, 0, 255)),
     ):
-        pixel = tuple(rgb[(y * 160 + x) * 3 : (y * 160 + x) * 3 + 3])
+        pixel = pixel_at(output, x, y)
         assert all(abs(a - b) <= 20 for a, b in zip(pixel, expected)), pixel
         pixels[name] = pixel
-    pcm = array.array(
-        "f", ffmpeg("-i", output, "-vn", "-ac", "1", "-ar", "48000", "-f", "f32le", "-")
-    )
-    if sys.byteorder != "little":
-        pcm.byteswap()
+    pcm = decode_pcm(output)
     quiet = spectral_amplitude(pcm, 0.3, 0.8, 1000)
     speech = spectral_amplitude(pcm, 1.5, 2.5, 1000)
     recovered = spectral_amplitude(pcm, 3.5, 3.9, 1000)
     reduction = 20 * math.log10(quiet / speech)
     assert reduction >= 6
+    assert reduction == pytest.approx(ducking_db(output))
     assert abs(20 * math.log10(recovered / quiet)) < 1
     assert spectral_amplitude(pcm, 1.5, 2.5, 440) > 0.1
     evidence = {
@@ -181,8 +203,10 @@ def test_existing_output_and_input_preserved(media, tmp_path):
 
 def test_wrong_stream_and_corrupt_input(media, tmp_path):
     output = tmp_path / "invalid.mp4"
-    with pytest.raises(ValueError, match="audio stream"):
+    with pytest.raises(ValueError, match="requires an audio stream"):
         compose(media[1], *media[1:], output)
+    with pytest.raises(ValueError, match="requires a video stream"):
+        compose(media[0], media[0], *media[2:], output)
     corrupt = tmp_path / "corrupt.wav"
     corrupt.write_bytes(b"not audio")
     with pytest.raises(ValueError, match="Cannot probe"):
@@ -219,7 +243,8 @@ def test_cli_missing_input(tmp_path):
         text=True,
     )
     assert result.returncode == 1
-    assert "ERROR:" in result.stderr
+    assert "ERROR: Input not found (narration)" in result.stderr
+    assert result.stderr.isascii()
     assert not (tmp_path / "out.mp4").exists()
 
 
@@ -262,5 +287,92 @@ def test_racing_output_is_not_overwritten(tmp_path, monkeypatch):
     with pytest.raises(FileExistsError):
         compose(*([source] * 4), output)
     assert output.read_bytes() == b"other writer"
+    assert source.read_bytes() == b"preserve"
+    assert not list(tmp_path.glob(".audio-first-*"))
+
+
+def test_greenscreen_with_alpha_is_rejected(media, tmp_path):
+    """A transparent-background clip would come out black, not composited."""
+    transparent = tmp_path / "alpha.mov"
+    clip(transparent, "color=c=black@0.0", "-vf", "format=argb", codec=("-c:v", "qtrle"))
+    (stream,) = probe(transparent)["streams"]
+    assert stream["pix_fmt"] == "argb"
+    output = tmp_path / "alpha-out.mp4"
+    with pytest.raises(ValueError, match="alpha channel"):
+        compose(media[0], transparent, *media[2:], output, width=160, height=128)
+    assert not output.exists()
+    assert not list(tmp_path.glob(".audio-first-*"))
+
+
+def test_despill_changes_green_tinted_foreground(media, tmp_path):
+    """0x90D060 survives the key; only despill can pull its green channel down."""
+    tinted = tmp_path / "tinted.mp4"
+    clip(
+        tinted,
+        "color=c=0x00ff00",
+        "-vf",
+        "drawbox=x=48:y=32:w=64:h=64:color=0x90D060:t=fill",
+    )
+    pixels = {}
+    for name, despill in (("off", None), ("mix0", 0), ("default", 0.5), ("mix1", 1)):
+        output = tmp_path / f"despill-{name}.mp4"
+        compose(media[0], tinted, *media[2:], output, width=160, height=128, despill=despill)
+        pixels[name] = pixel_at(output, 80, 64)
+        assert all(abs(a - b) <= 20 for a, b in zip(pixel_at(output, 16, 16), (0, 0, 255)))
+    print("AUDIO_FIRST_DESPILL=" + json.dumps(pixels))
+    assert all(abs(a - b) <= 12 for a, b in zip(pixels["off"], (0x90, 0xD0, 0x60))), pixels
+    for name in ("mix0", "default", "mix1"):
+        assert pixels["off"][1] - pixels[name][1] >= 30, pixels
+    # mix weighs red against blue, so it changes the result but 0 does not disable it.
+    assert abs(pixels["mix0"][1] - pixels["mix1"][1]) >= 10, pixels
+
+
+def test_duck_ratio_controls_reduction(media, tmp_path):
+    reductions = {}
+    for ratio in (2, 12):
+        output = tmp_path / f"ratio-{ratio}.mp4"
+        compose(*media, output, width=160, height=128, duck_ratio=ratio)
+        reductions[ratio] = ducking_db(output)
+    print("AUDIO_FIRST_DUCK_RATIO=" + json.dumps(reductions))
+    assert reductions[2] >= 6
+    assert reductions[12] - reductions[2] >= 6, reductions
+
+
+def test_missing_output_directory_fails_in_plain_ascii(media, tmp_path):
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "src" / "audio_first_compositor.py"),
+            *map(str, media),
+            str(tmp_path / "no-such-dir" / "out.mp4"),
+        ],
+        capture_output=True,
+    )
+    assert result.returncode == 1
+    assert result.stderr.decode("ascii").strip() == "ERROR: Output directory does not exist"
+    assert not (tmp_path / "no-such-dir").exists()
+
+
+def test_publish_failure_leaves_no_empty_output(tmp_path, monkeypatch):
+    """Destination was created exclusively, then the staged file could not be read."""
+    import src.audio_first_compositor as module
+
+    source = tmp_path / "source.wav"
+    source.write_bytes(b"preserve")
+    output = tmp_path / "out.mp4"
+    monkeypatch.setattr(
+        module,
+        "probe",
+        lambda _: {
+            "streams": [{"codec_type": "audio", "duration": "1.013"}, {"codec_type": "video"}]
+        },
+    )
+    # Encoder reports success but never writes the staged file.
+    monkeypatch.setattr(
+        module, "run", lambda command: subprocess.CompletedProcess(command, 0, "", "")
+    )
+    with pytest.raises(FileNotFoundError):
+        compose(*([source] * 4), output)
+    assert not output.exists()
     assert source.read_bytes() == b"preserve"
     assert not list(tmp_path.glob(".audio-first-*"))

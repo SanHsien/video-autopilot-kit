@@ -5,6 +5,10 @@
   sidechain BGM ducking and exclusive output creation. Synthetic acceptance tests ran
   against FFmpeg 9.0.2 (duration within one frame, pixel tolerance, 28.87 dB ducking);
   commands, measured values and limits are in `docs/audio-first-compositor-validation.md`.
+  Review follow-up: green-screen inputs that already carry alpha are rejected instead of
+  silently compositing black; `despill=None` / `--no-despill` skips despill (the value maps
+  to ffmpeg's `mix`, so 0 is not "off"); a failed publish no longer leaves an empty output;
+  missing inputs and output directories report plain-ASCII errors.
 
 - **Maintenance (2026-11-06):** Reviewed pytest 9.2.0 and recorded a version-bounded freshness deferral;
   keep the `>=9.1,<10` compatibility range and the separate Python 3.9 declaration. Releases beyond 9.2 reopen review.

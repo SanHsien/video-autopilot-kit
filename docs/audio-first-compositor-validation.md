@@ -1,8 +1,8 @@
 # Audio-First 本機綠幕合成驗收（T-20261115-11）
 
-STATUS: DONE — 以本機合成素材實測通過；聚焦測試 18 passed，完整 Windows gate 綠燈。
+STATUS: DONE — 以本機合成素材實測通過；聚焦測試 23 passed，完整 Windows gate 綠燈。
 
-日期：2026-11-15。基準 commit：`9d42877`。不安裝套件、不呼叫雲端服務、不登入、不上傳。
+日期：2026-11-15。基準 commit：`9d42877`；複審後的補強建立在 `f3d335f` 上。不安裝套件、不呼叫雲端服務、不登入、不上傳。
 實作與測試初稿在無法執行 FFmpeg 的沙盒內寫成；同日在可執行 FFmpeg 的本機修正並量測（見「修正紀錄」）。
 
 ## 使用與範圍
@@ -15,6 +15,12 @@ python src/audio_first_compositor.py voice.wav green.mp4 background.mp4 music.wa
 全部裁至配音時長向上取整的一格邊界。預設 H.264 / yuv420p、AAC / 48 kHz、固定 30 fps。
 尺寸必須為正偶數；不讀其他輸入的音軌。API 與 CLI 可調 key、similarity、blend、despill、
 bgm_gain、duck_threshold、duck_ratio；`--help` 列旗標。
+
+`despill` 參數直接傳給 ffmpeg `despill` 濾鏡的 `mix` 選項。`mix` 是溢色圖以紅色還是藍色為基準的比例，
+不是強度：0 仍會去溢色（實測綠色通道反而降最多）。要完全不套用，API 傳 `despill=None`，CLI 加 `--no-despill`。
+
+綠幕輸入若本身帶 alpha（ffprobe `pix_fmt` 以 `argb`／`rgba`／`abgr`／`bgra`／`yuva`／`gbrap`／`ya8`／`ayuv`／`vuya` 開頭）
+會直接拒絕：chromakey 會覆寫 alpha，透明區會變成不透明的黑色而不是露出背景。請先把素材鋪到 key 色上。
 
 ```text
 配音 stream duration -> ceil(duration * fps) -> 時間軸
@@ -62,6 +68,8 @@ Python 3.14.10、pytest 9.2.0、Ruff 0.17.3。目標配音時長 4.013 秒，固
 | BGM 恢復 | 3.5–3.9 秒與旁白前相差 < 1 dB | 振幅 0.050021，差 −0.0004 dB | 通過 |
 | 配音保留 | 440 Hz 振幅 > 0.1 | 0.199966 | 通過 |
 | 峰值 | 不削波（< 1.0） | 0.2021 | 通過 |
+| despill 有作用 | 偏綠前景 `0x90D060`（144,208,96）套用後綠色通道至少降 30 | 不套用 (143,206,94)；mix 0 → (142,93,94)；mix 0.5 → (143,117,94)；mix 1 → (142,143,93) | 通過 |
+| `duck_ratio` 有接線 | ratio 12 比 ratio 2 至少多降 6 dB | ratio 2 降 15.74 dB；ratio 12 降 28.87 dB（差 13.14 dB） | 通過 |
 | 錯誤輸入 | 明確失敗、不產生或覆寫輸出 | 見下表 | 通過 |
 
 合成成品 SHA256（160×128 測試片）：`5af7ab8e8ecc5df5704c2148e9349a7b5b4b49e501d8ef27a77b42fdaa645709`。
@@ -79,7 +87,11 @@ Python 3.14.10、pytest 9.2.0、Ruff 0.17.3。目標配音時長 4.013 秒，固
 | 編碼失敗（模擬 ffmpeg 回非零） | `ValueError`，輸出與暫存目錄都不留 | passed |
 | 配音時長未知／0／NaN／inf／負值 5 種 | `ValueError`，輸入不變 | 5 passed |
 | 編碼途中別人先寫了輸出檔 | `FileExistsError`，對方內容保留 | passed |
-| CLI 給不存在的輸入 | exit 1、stderr 有 `ERROR:`，輸出不存在 | passed |
+| CLI 給不存在的輸入 | exit 1、stderr 為純 ASCII 的 `ERROR: Input not found (narration)`，輸出不存在 | passed |
+| 視訊位置給了沒有畫面的音檔 | `ValueError`（requires a video stream） | passed |
+| 綠幕是帶 alpha 的 qtrle `argb` .mov | `ValueError`（alpha channel），輸出與暫存目錄都不留 | passed |
+| CLI 的輸出父目錄不存在 | exit 1、stderr 恰為 `ERROR: Output directory does not exist`（純 ASCII），不建立目錄 | passed |
+| 排他建檔成功後讀不到暫存片 | `FileNotFoundError`，不留 0 位元組目的檔 | passed |
 | CLI 對已存在的輸出重跑（手動） | exit 1、`ERROR: Output already exists; refusing to overwrite` | 符合 |
 
 ## 命令與結束碼
@@ -87,9 +99,9 @@ Python 3.14.10、pytest 9.2.0、Ruff 0.17.3。目標配音時長 4.013 秒，固
 ```powershell
 # 聚焦測試；成品排他寫到 repo 外的目錄
 $env:AUDIO_FIRST_ARTIFACT_DIR = '<repo 外的目錄>'
-python -m pytest -q -s tests/test_audio_first_compositor.py        # exit 0，18 passed
+python -m pytest -q -s tests/test_audio_first_compositor.py        # exit 0，23 passed
 # 從 repo 上一層的 cwd 再跑一次
-python -m pytest -q <repo>/tests/test_audio_first_compositor.py -p no:cacheprovider   # exit 0，18 passed
+python -m pytest -q <repo>/tests/test_audio_first_compositor.py -p no:cacheprovider   # exit 0，23 passed
 
 # 對 repo 外成品獨立量測
 ffprobe -v error -show_entries stream=codec_type,codec_name,pix_fmt,width,height,r_frame_rate,avg_frame_rate,nb_frames,duration,sample_rate,channels:format=duration,format_name -of json audio-first-synthetic.mp4
@@ -102,7 +114,7 @@ ffmpeg -v error -xerror -i cli-720p.mp4 -f null -                  # exit 0
 python src/audio_first_compositor.py voice.wav green.mp4 blue.mp4 music.wav cli-720p.mp4   # exit 1，拒絕覆寫
 
 # 完整 Windows gate
-pwsh -NoProfile -File tools\dev_check.ps1                          # exit 0，pytest 275 passed，HEALTH GREEN
+pwsh -NoProfile -File tools\dev_check.ps1                          # exit 0，pytest 280 passed，HEALTH GREEN
 ```
 
 測試片素材由測試 fixture 產生，命令為
@@ -116,7 +128,24 @@ pwsh -NoProfile -File tools\dev_check.ps1                          # exit 0，py
 - `test_cli_missing_input` 原用相對路徑 `src/audio_first_compositor.py`；pytest 的 cwd 不是 repo 根目錄時
   Python 找不到腳本回 exit 2，斷言 `== 1` 失敗。改用由測試檔位置算出的絕對路徑，並補斷言輸出不存在。
 - 驗收測試補上 audio stream 時長與 `nb_frames == 121` 斷言；斷言門檻沒有放寬，沒有新增 skip。
-- 實作 `src/audio_first_compositor.py` 實測後不需修改。
+- 首次實測時實作 `src/audio_first_compositor.py` 不需修改；以下是獨立複審後的補強（同日）。
+- 帶 alpha 的綠幕輸入原本結束碼 0 但背景變黑，改為明確拒絕。
+- `despill` 原本沒有測試守住，也無法關閉；補取樣測試，新增 `despill=None`／`--no-despill`。
+- `duck_ratio` 原本寫死也測不出來；補兩種 ratio 的降幅比較。
+- 排他建檔成功但開暫存片失敗時會留 0 位元組目的檔，改為失敗即刪除。
+- 「an video」錯字；缺輸入檔與輸出父目錄不存在改用自己的英文訊息（原本直接印作業系統的在地化訊息，在 cp950 主控台會亂碼）。
+
+每個新測試都做過對應 mutation 並確認變紅後還原：
+
+| Mutation | 變紅的測試 |
+| --- | --- |
+| 拿掉 alpha 檢查 | `test_greenscreen_with_alpha_is_rejected` |
+| 永不加 despill／mix 寫死 0.5／不理會 `None` | `test_despill_changes_green_tinted_foreground`（三種各自變紅） |
+| ratio 寫死 1.5／寫死 12 | `test_duck_ratio_controls_reduction`（兩種各自變紅） |
+| 發布失敗不刪目的檔 | `test_publish_failure_leaves_no_empty_output` |
+| 拿掉輸出目錄檢查 | `test_missing_output_directory_fails_in_plain_ascii` |
+| 缺輸入檔改回作業系統訊息 | `test_cli_missing_input` |
+| 冠詞固定為 an | `test_wrong_stream_and_corrupt_input` |
 
 ## 重複性檢查
 
@@ -129,7 +158,8 @@ pwsh -NoProfile -File tools\dev_check.ps1                          # exit 0，py
 
 - 量測只支持這組固定合成素材，不代表任意旁白必定衰減 6 dB。壓縮器依輸入振幅、閾值與比例反應；
   真實素材須調參並聽驗。
-- 純色塊的取樣點離邊緣很遠，沒有量測去背邊緣、溢色或半透明區域的品質。
+- 純色塊的取樣點離邊緣很遠，沒有量測去背邊緣或半透明區域的品質；despill 只驗了一個偏綠色塊。
+- alpha 偵測靠 `pix_fmt` 名稱前綴；調色盤格式（如 `pal8`）可能帶透明但不會被擋。
 - 輸入會直接拉伸至指定尺寸，未處理保比例裁切、HDR、字幕或響度標準（如 LUFS）。
 - 配音必須有 audio-stream duration；容器沒寫 stream 時長的格式會被拒絕，不猜測。
 - 只在 Windows 11 + FFmpeg 9.0.2 實測；其他平台與版本未查證。
