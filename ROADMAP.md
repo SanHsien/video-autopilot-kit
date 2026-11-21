@@ -13,6 +13,7 @@
 
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
+| 審上游 `5bf9bce` 之後的 5 個 commit（v0.28.0、v0.28.1，tip `61c19a6`）、PR #34–#35（已合併）與 #39–#40（開放）、issue #36–#38 | 中期「處理上游新增項目」的觸發條件已成立：`Upstream check` 在 `main` 最近兩次 run（2026-11-20，run 44792406383）皆 failure；2026-11-21 本機 `python tools/check_upstream_updates.py` 回報 baseline behind 5、PR 4 筆、issue 3 筆新項目。#36／#39（非 ANSI 安裝路徑回報 FAILED）是 Windows 問題，要先查本 fork 是否同樣受影響 | 同中期該列：`docs/DECISIONS.md` 與 `docs/UPSTREAM.md` 各新增一筆判定與理由；水位推進；`python tools/check_upstream_updates.py` 無待審；採用者先有紅燈測試 | Claude Sonnet | 2026-11-21 艦隊中期觸發巡檢；`gh api repos/Hao0321/video-autopilot-kit/compare/5bf9bce...main`（ahead_by 5）；`tools/upstream_baseline.json` |
 
 ## 中期：等條件成立再做
 
