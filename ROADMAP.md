@@ -6,14 +6,13 @@
 ## 現況
 
 `video-autopilot-kit` 是 `Hao0321/video-autopilot-kit` 的 Windows-first 維護 fork：ffmpeg 影片工具、CapCut 輔助、Shorts／訪談的機械化 QA gate，以及 Path 1 Tkinter GUI／可攜 EXE（`AGENTS.md:5-13`、`FORK.md`）。最近 release 是 v0.13.0（2026-08-09）；`main` 帶有未發行的 gate fail-closed 修正、Pillow 13 下限與上游三項採用（`CHANGELOG.md:1` 起的 Unreleased 段）。
-健康：open issue 0、open PR 0、Dependabot 與 code scanning 告警 0，CI、CodeQL、Upstream check 在 `main` 最近一次皆 success，Dependency freshness 2026-10-25 success（2026-10-29 `gh` 查詢）。與上游「No common ancestor」是已知事實，不是缺陷；上游審查水位在 commit `a50c73b`、PR 29、issue 30（`tools/upstream_baseline.json`）。
+健康：open issue 0、open PR 0、Dependabot 與 code scanning 告警 0，CI、CodeQL、Upstream check 在 `main` 最近一次皆 success，Dependency freshness 2026-10-25 success（2026-10-29 `gh` 查詢）。與上游「No common ancestor」是已知事實，不是缺陷；上游審查水位在 commit `61c19a6`、PR 40、issue 38（2026-11-21 審查，`tools/upstream_baseline.json`）。
 卡住的地方：沒有。未發行的變更還沒包成新的 EXE／release（維護者決定）；`REPO_REVIEW.md` 已改寫為現況版本（2026-10-26 深度掃描與現行基準）。
 
 ## 近期：可以直接動手
 
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 審上游 `5bf9bce` 之後的 5 個 commit（v0.28.0、v0.28.1，tip `61c19a6`）、PR #34–#35（已合併）與 #39–#40（開放）、issue #36–#38 | 中期「處理上游新增項目」的觸發條件已成立：`Upstream check` 在 `main` 最近兩次 run（2026-11-20，run 44792406383）皆 failure；2026-11-21 本機 `python tools/check_upstream_updates.py` 回報 baseline behind 5、PR 4 筆、issue 3 筆新項目。#36／#39（非 ANSI 安裝路徑回報 FAILED）是 Windows 問題，要先查本 fork 是否同樣受影響 | 同中期該列：`docs/DECISIONS.md` 與 `docs/UPSTREAM.md` 各新增一筆判定與理由；水位推進；`python tools/check_upstream_updates.py` 無待審；採用者先有紅燈測試 | Claude Sonnet | 2026-11-21 艦隊中期觸發巡檢；`gh api repos/Hao0321/video-autopilot-kit/compare/5bf9bce...main`（ahead_by 5）；`tools/upstream_baseline.json` |
 
 ## 中期：等條件成立再做
 

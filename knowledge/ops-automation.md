@@ -5,7 +5,7 @@
 ## 四件套
 
 1. **`src/channel_tracker.py` — 經營狀態機**
-   - `channel_state.json`（repo root；首次用複製 `examples/channel_state.example.json`）＝單一真理：每支已發布影片的 D2/D7/D28 快照排程＋待辦清單（owner/due）。
+   - `src/channel_state.json`（`src/channel_tracker.py` 讀這個位置，已在 `.gitignore`；首次把 `examples/channel_state.example.json` 複製過去）＝單一真理：每支已發布影片的 D2/D7/D28 快照排程＋待辦清單（owner/due）。
    - `python src/channel_tracker.py` → 今日到期報告；`--date` 模擬任一天。
    - 新片發布時 `add_video()` 一次，三窗快照自動排程。
 
@@ -14,9 +14,9 @@
    - `--quick` 跳過 ffmpeg 重測試。任何大改動後跑一次。
 
 3. **三道閘門（生產線包夾）**
-   - 規劃：`plan_gate.py`（框架/機器歸屬/≥8 組包裝配對/合規/cluster 關鍵字，缺=不准動筆）
-   - 腳本：`script_gate.py`（voice+觀眾語言+節奏，PASS 才錄音）
-   - 交付：`delivery_qa.py`（全 gate 綠才出貨）
+   - 規劃：`src/longform_maker/plan_gate.py`（框架/機器歸屬/≥8 組包裝配對/合規/cluster 關鍵字，缺=不准動筆）
+   - 腳本：`src/longform_maker/script_gate.py`（voice+觀眾語言+節奏，PASS 才錄音）
+   - 交付：`src/capcut_helpers/delivery_qa.py`（全 gate 綠才出貨）
 
 4. **排程巡檢（把 AI 排成鬧鐘）**
    - 用你的 AI 助手排每日排程任務，prompt 核心：
@@ -28,4 +28,4 @@
 - 每日：巡檢自動跑（人只看卡片）。
 - 每支片：發布日 `add_video()` → D2/D7/D28 快照到期自動提醒 → 數據判讀寫回 video log。
 - 每週一：自動週報（上週變化＋本週到期＋一個建議）。
-- 大改動後：`system_health.py` 全跑一次。
+- 大改動後：`src/system_health.py` 全跑一次。

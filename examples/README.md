@@ -82,5 +82,5 @@ zero-config filename path works without it.
 ## Also in this folder
 
 - `PLAN_TEMPLATE.md` — the planning template `plan_gate.py` validates (v0.9)
-- `channel_state.example.json` — ops state-machine template; copy it to the repo root as
-  `channel_state.json` to start tracking (v0.9)
+- `channel_state.example.json` — ops state-machine template; copy it to
+  `src/channel_state.json` (the path `src/channel_tracker.py` reads; git-ignored) to start tracking (v0.9)

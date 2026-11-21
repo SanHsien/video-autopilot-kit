@@ -1,5 +1,12 @@
 ## Unreleased — gates fail closed on malformed input; media fixes found in upstream review (2026-10-25)
 
+- **Fixed (upstream review 2026-11-21, each with a reproducing test):** the channel-state setup steps
+  pointed at the repo root while `src/channel_tracker.py` reads `src/channel_state.json`. The
+  `interview_autopilot` SKIP hint now derives the path from `channel_tracker.STATE_PATH`, and
+  `examples/README.md` / `knowledge/ops-automation.md` name the real location; the ops guide also uses
+  full paths for `plan_gate.py`, `script_gate.py`, `delivery_qa.py` and `system_health.py`. Same class
+  of fix as upstream v0.28.0 (`96bc1c0`); the state file stays in `src/` (upstream moved it to `data/`).
+
 - **Added (2026-11-15):** Local Audio-First green-screen CLI
   (`src/audio_first_compositor.py`) with narration-driven timing, chromakey/despill,
   sidechain BGM ducking and exclusive output creation. Synthetic acceptance tests ran

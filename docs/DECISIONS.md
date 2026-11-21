@@ -1,5 +1,31 @@
 # 維護決策
 
+## 2026-11-21：上游 5 個 commit（v0.28.0、v0.28.1）、PR #34、#35、#39、#40 與 issue #36–#38 審查（v0.28.0 的兩處路徑更正以自有實作補上）
+
+**決定**：`reviewed_through` 推進至 `61c19a6`、PR 水位 33 → 40、issue 水位 31 → 38。
+`5bf9bce..61c19a6` 共 5 筆、65 檔、+2,353/-827（`git diff --shortstat 5bf9bce upstream/main`）；本 fork 也有的檔只有 9 個
+（`ci.yml`、`CHANGELOG.md`、`README.md`、`README.en.md`、`examples/README.md`、`knowledge/README.md`、`knowledge/ops-automation.md`、
+`src/interview_autopilot.py`、`src/system_health.py`）。
+
+| 範圍 | 結論 | 證據與理由 |
+| --- | --- | --- |
+| `96bc1c0`（PR #34，v0.28.0）中 `channel_state.json` 複製位置與經營指南的腳本路徑 | 採用（自有實作，非 cherry-pick） | 本 fork 實測有同類缺陷：`src/channel_tracker.py` 讀 `src/channel_state.json`，但 `examples/README.md`、`knowledge/ops-automation.md` 與 `interview_autopilot._schedule()` 的 SKIP 提示都叫使用者複製到 repo root，照做之後 tracker 仍讀不到；指南裡的 `plan_gate.py`、`script_gate.py`、`delivery_qa.py`、`system_health.py` 是裸檔名，從 repo root 跑不起來。上游改把狀態檔搬到 `data/`；本 fork 不搬（會讓既有 `src/channel_state.json` 失效），改讓提示由 `channel_tracker.STATE_PATH` 推出路徑、文件寫出實際位置與完整路徑。先寫的三個測試修正前皆紅 |
+| `96bc1c0` 其餘（canonical Skill 複製防護、manifest Skill 路徑、`project_kernel`／`project_paths` 中央根目錄探索、`audit.config.json`、經營指南改為「不排程」） | 不引用 | 對應的 `codex-skill/`、`scripts/public_*`、`project_kernel*.py`、`project_paths.py` 在本 fork 不存在；「不排程」是上游的產品取向改寫，不是本 fork 的缺陷，本 fork 指南維持原排程建議 |
+| `aa2b90a`（CI：Python 3.9 Linux leg 改 `ubuntu-24.04`） | 不引用（本 fork 已有） | 本 fork 2026-11-05 已自行做同樣處理（`ci.yml` 的 `runner: ubuntu-24.04`，見同日條目），結構相同 |
+| `5b06dc8`（PR #35，v0.28.1，公開樹清理） | 不引用 | 改的是上游同步工具（`scripts/public_reference_filter.py` 等）、sync receipt 與模組改名（`mrbeast_*` → `high_information_editing`／`effect_source_map`）；本 fork 沒有這些模組，`src/system_health.py` 也不列它們，改名對本 fork 無作用 |
+| `b48c7d9`、`61c19a6` | 不引用 | PR #34、#35 的 merge commit，無獨立內容 |
+| PR #39／issue #36（`install_or_upgrade.py` 在非 ANSI 路徑回報 FAILED） | 不適用 | 本 fork 沒有 `install_or_upgrade.py`，也沒有上游 updater（2026-08-12 U13-01 不引入） |
+| PR #40／issue #37（範例 02 在 v0.26.0 後結束碼 1） | 不適用 | 本 fork 的 `examples/02_caption_broll_match.py` 包的是 `caption_broll_matcher`，不是 Editkin workflow self-test；本機實跑結束碼 0 |
+| issue #38（`architecture_gate.py` 找不到 Cleanup 評估器） | 不適用 | 本 fork 沒有 `src/architecture_gate.py` |
+
+**隱藏內容掃描（判準八）**：對 `git diff 5bf9bce upstream/main` 的新增行找 `eval(`、`new Function`、`globalThis`、`global.require`、
+200 字以上 base64、120 字以上 hex，皆 0 命中；行內 20 個以上連續空白夾內容（排除表格行）0 命中；超過 600 字元的新增行只有 2 行
+（Skill 文件一段說明文字、`release-manifest.json` 的 `notes` 字串），無隱藏內容。`src/` 新增行的 `Hao0321`／`馬來西亞`／`桃園機場`／`IMG_5998` 0 命中。
+PR #39、#40 的檔案清單以 `gh pr list --json files`（唯讀）確認；issue／PR 內文只當資料讀。
+
+**觸發條件**：本 fork 引入 bootstrap 安裝器或 updater 時重看 PR #39 的 stdout 編碼處理；本 fork 改以 Editkin workflow 驅動範例時重看 PR #40；
+上游若再調整 `channel_tracker` 狀態檔位置或 `interview_autopilot` 排程介面，重評本次自有實作與上游 `data/` 位置的差異。
+
 ## 2026-11-10：上游 4 個 commit（v0.26.0、v0.27.0）與 PR #32、#33 審查（無引用）
 
 **決定**：`reviewed_through` 推進至 `5bf9bce`、PR 水位 33、issue 水位 31 不動（上游 issue 無新編號）。

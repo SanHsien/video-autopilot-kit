@@ -268,3 +268,19 @@ def test_single_file_fallback_fail_closed_contract():
         with pytest.raises(AssertionError):
             gate_core.raise_if_failed(rep, "label", "title")
 
+
+
+def test_missing_channel_state_hint_names_the_path_the_tracker_reads(monkeypatch, capsys):
+    # Upstream v0.28.0 (96bc1c0) corrected its copy hint; this fork's hint said "repo root"
+    # while channel_tracker reads src/channel_state.json, so following it never fixed the SKIP.
+    import channel_tracker
+
+    def _missing(*_args, **_kwargs):
+        raise FileNotFoundError("channel_state.json")
+
+    monkeypatch.setattr(channel_tracker, "load_state", _missing)
+    assert interview_autopilot._schedule("01", "guest", "2026-11-28", "2026-12-05") is False
+    out = capsys.readouterr().out
+    expected = Path(channel_tracker.STATE_PATH).relative_to(ROOT).as_posix()
+    assert expected in out
+    assert "repo root" not in out

@@ -33,6 +33,14 @@ python tools\check_upstream_updates.py --strict
 
 Baseline 代表「已審查」，不代表「全部已合併」。
 
+## 2026-11-21：審至 `61c19a6`
+
+- commit：`5bf9bce..61c19a6` 共 5 筆（v0.28.0、v0.28.1 與兩個 merge）；v0.28.0 指出的 `channel_state.json` 複製位置與經營指南腳本路徑錯誤，本 fork 也有，以自有實作補上（狀態檔維持 `src/`，不跟上游搬 `data/`），其餘不引用。
+- PR：`#34`、`#35`（已合併，即上述 commit）、`#39`、`#40`（open，改的 `install_or_upgrade.py` 與 Editkin 版範例 02 在本 fork 不存在），未收。
+- issue：`#36`–`#38` 皆不適用（本 fork 無 bootstrap 安裝器、範例 02 實跑結束碼 0、無 `architecture_gate.py`）。
+
+分類、隱藏內容掃描與觸發條件見 [`DECISIONS.md`](DECISIONS.md) 同日條目。水位：commit `61c19a6`、PR #40、issue #38。
+
 ## 2026-11-10：審至 `5bf9bce`
 
 - commit：`a50c73b..5bf9bce` 共 4 筆（v0.26.0 長片流程、v0.27.0 Editkin 0.16.0 安裝說明），不引用；34 個變更檔中本 fork 也有的只有 6 個文件檔。
